@@ -13,52 +13,72 @@
 ```Python
 initialMap()
 
-    crossSet = {}
-    unfinishedCrosses = {}
+    intersectionSet = {}
+    unfinishedIntersections = {}
+    mappingStared = False
 
-    driveForward()
+    while True:
+        if mappingStared and unfinishedIntersections == {}:
+            break
+        
+        driveForward()
+ 
+        if intersection is detected:
+            mappingStared = True
 
-    do 
-        if a cross is detected:
-            if cross is not in crossSet:
-                cross = CreateCrossDataStructure()
+            if intersection is not in intersectionSet:
+                intersection = CreateIntersectionDataStructure()
+                
 
-                currExit = cross.get_current_exit()
-                currExit.visted = true
-                if lastCross:
-                    cross.connection[currExit] = lastCr
+                if lastintersection:
+                    intersection.connection[currExit] = lastintersection
+                lastintersection = intersection
 
-                TurnLeft();
-                crossSet.append(cross)
-                unfinishedCrosses.append(cross)
-                lastCross = cross
+                exits = intersection.get_all_exits()
+                for exit in exits:
+                    intersection.exits.exit.visted = False
+                currExit = intersection.get_current_exit()
+                intersection.exits.currExit.visted = True
+                
+                chooseExit = turnLeft() # turn left and return the exit
+                intersection.exits.chooseExit.visted = True
+
+                unfinishedIntersections.append(intersection)
+                intersectionSet.append(intersection)
+                
             else:
                 # figure out at which exit we are
-                currExit = cross.get_current_exit()
-                currExit.visited = true
-                cross.connection[currExit] = lastCross
+                currExit = intersection.get_current_exit()
+                intersection.exits.currExit.visited = True
+                intersection.connection[currExit] = lastintersection
 
-                # figure out next exit to turn to
-                for exit in cross.exit:
-                    if not exit.visited:
-                        turnToThisExit(exit)
-                        break
+                ## figure out next exit to turn to
+                # count the unvisited exits
+                countUnvisitedExits = intersection.exits.count_unvisited()
+                # if all exits are visited
+                if countUnvisitedExits == 0:
+                    # TODO create find nearest unfinished intersection
+                    randomExit = intersection.exits.random()
+                    turnToThisExit(randomExit)
+                    unfinishedintersectiones.pop(intersection)
                 
-                # all exits are visited
-                unfinishedCrosses.pop(cross)
+                # if only one exit is not visited
+                elif countUnvisitedExits == 1:
+                    turnToThisExit(exit)
+                    intersection.exits.exit.visited = True
+                    unfinishedintersectiones.pop(intersection)
 
-                # choose exit on random TODO create find nearest unfinished cross
-                randomExit = cross.exits.random()
-                turnToThisExit(randomExit)
-                
-
-    while (unifinishedCrosses is not Empty):
+                # if >= 2 exits are not visited
+                elif countUnvisitedExits == 2:
+                    turnToThisExit(exit)
+                    intersection.exits.exit.visited = True
+                    break
 ```
 
 ```Python
-class Cross():
+class intersection():
     exits = [] # List of Exits Coordinates
-    neighbors = [] # Cross's that are connected to this one
+    neighbors = [] # intersection's that are connected to this one
     dict connections = {} # Dictionary which saves the connection between exit and neighbors
 
 ```
@@ -70,3 +90,4 @@ with different initial points
 ![PseudoTest3](test/3.gif "PseudoTest3")
 ![PseudoTest4](test/4.gif "PseudoTest4")
 ![PseudoTest5](test/5.gif "PseudoTest5")
+![PseudoTest6](test/6.gif "PseudoTest6")
