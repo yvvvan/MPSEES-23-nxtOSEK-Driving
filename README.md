@@ -2,7 +2,9 @@
 
 - [ ] install ORB3-SLAM and play around with it
 - [ ] implement map generation
-- [ ] implement a test for the map generation
+- [x] implement a test for pseudocode
+- [ ] improve pseudocode
+- [ ] implement a test for the map generation 
 - [ ] integrate ORB3-SLAM and map generation
 - [ ] look into path finding algorithm
 
@@ -60,3 +62,11 @@ class Cross():
     dict connections = {} # Dictionary which saves the connection between exit and neighbors
 
 ```
+### Test Result of the Pseudocode based on python
+with different initial points
+
+![PseudoTest1](test/1.gif "PseudoTest1")
+![PseudoTest2](test/2.gif "PseudoTest2")
+![PseudoTest3](test/3.gif "PseudoTest3")
+![PseudoTest4](test/4.gif "PseudoTest4")
+![PseudoTest5](test/5.gif "PseudoTest5")
