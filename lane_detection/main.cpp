@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string.h>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 
 /**
@@ -20,8 +21,18 @@ cv::Mat image_preprocessing(cv::Mat frame) {
 
     // TODO FABIAN
 
-    cv::Mat placeholder;
-    return placeholder;
+    cv::Mat grayscaled_frame;
+    cv::cvtColor(frame,grayscaled_frame,cv::COLOR_BGR2GRAY);    //convert original frame into a grayscaled image, save result in previous created variable
+    cv::Mat masking_frame;  //Frame to store mask overlay
+    //PLACEHOLDER FOR MASKING
+    cv::Mat masked_frame;
+    grayscaled_frame.copyTo(masked_frame,masking_frame);    //apply the mask on the grayscaled image
+    cv::Mat blurred_frame;
+    cv::GaussianBlur(masked_frame,blurred_frame,cv::Size(5,5),0);   //applying blur, where size 5x5 and 0 are just placeholders for now
+    cv::Mat result_frame;
+    cv::Canny(blurred_frame,result_frame,50,150);   //applying Canny filter, where th1 and th2 are just placeholders for now
+
+    return result_frame;
 }
 
 /**
