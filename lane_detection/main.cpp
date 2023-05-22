@@ -9,31 +9,33 @@
  *
  * Does the following preprocessing steps:
  *      - grayscaling
- *      - masking
  *      - gaussian blurring
  *      - canny algorithm
+ *      - masking
  *      - (binary image improvement - optional)
  *
  * @param frame
  * @return
  */
 cv::Mat image_preprocessing(cv::Mat frame) {
-
-    // TODO FABIAN
-
+    //Grayscaling
     cv::Mat grayscaled_frame;
-    cv::cvtColor(frame, grayscaled_frame,
-                 cv::COLOR_BGR2GRAY);    //convert original frame into a grayscaled image, save result in previous created variable
-    cv::Mat masking_frame;  //Frame to store mask overlay
-    //PLACEHOLDER FOR MASKING
-    cv::Mat masked_frame;
-    grayscaled_frame.copyTo(masked_frame, masking_frame);    //apply the mask on the grayscaled image
+    cv::cvtColor(frame,grayscaled_frame,cv::COLOR_BGR2GRAY);
+    //Blurring
     cv::Mat blurred_frame;
-    cv::GaussianBlur(masked_frame, blurred_frame, cv::Size(5, 5),
-                     0);   //applying blur, where size 5x5 and 0 are just placeholders for now
+    cv::GaussianBlur(grayscaled_frame,blurred_frame,cv::Size(15,15),0);
+    //Edge Detection using Canny
+    cv::Mat canny_frame;
+    cv::Canny(blurred_frame,canny_frame,50,150);
+    //Masking
+    cv::Mat masking_frame(frame.size(), CV_8UC1, 0);
+    double mask_th = 0.6;
+    int mask_height = static_cast<int>(frame.rows * mask_th);
+    cv::Rect roi(0, frame.rows - mask_height, frame.cols, mask_height);
+    masking_frame(roi) = 255;
+    //Applying the Mask
     cv::Mat result_frame;
-    cv::Canny(blurred_frame, result_frame, 50,
-              150);   //applying Canny filter, where th1 and th2 are just placeholders for now
+    canny_frame.copyTo(result_frame,masking_frame);
 
     return result_frame;
 }
@@ -115,10 +117,42 @@ void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i& leftLane, cv::Vec4i& 
  */
 std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
 
-    // TODO FABIAN
+    std::vector<cv::Vec4i> center_line;
+    //Case 1: Both lines detected
+    if(leftLane != cv::Vec4i() && rightLane != cv::Vec4i()) {
 
-    std::vector<cv::Vec4i> placeholder;
-    return placeholder;
+        //Extract all start and end points
+        cv::Point2f l1(leftLane[0], leftLane[1]);
+        cv::Point2f l2(leftLane[2], leftLane[3]);
+        cv::Point2f r1(rightLane[0], rightLane[1]);
+        cv::Point2f r2(rightLane[2], rightLane[3]);
+
+        //calculate mid point of each side
+        cv::Point2f lower_mid = (l1 + r1) * 0.5;
+        cv::Point2f upper_mid = (l2 + r2) * 0.5;
+
+        //create center between both lines
+        cv::Vec4i center(lower_mid.x, lower_mid.y, upper_mid.x, upper_mid.y);
+        center_line.push_back(center);
+
+    } else if(leftLane != cv::Vec4i()) {
+
+        //PLACEHOLDER FOR CASE 2 (if needed)
+        std::cout << "Right line missing." << std::endl;
+
+    } else if(rightLane != cv::Vec4i()) {
+
+        //PLACEHOLDER FOR CASE 2 (if needed)
+        std::cout << "Left line missing." << std::endl;
+
+    } else {
+        //PLACEHOLDER FOR CASE 3
+        std::cout << "Both lines missing." << std::endl;
+
+    }
+    //TODO Approximation Handling if needed (CASE 2 & 3)
+
+    return center_line;
 }
 
 /**
