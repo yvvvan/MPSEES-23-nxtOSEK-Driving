@@ -3,7 +3,6 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-
 /**
  * image_preprocessing
  *
@@ -18,26 +17,26 @@
  * @return
  */
 cv::Mat image_preprocessing(cv::Mat frame) {
-    //Grayscaling
-    cv::Mat grayscaled_frame;
-    cv::cvtColor(frame,grayscaled_frame,cv::COLOR_BGR2GRAY);
-    //Blurring
-    cv::Mat blurred_frame;
-    cv::GaussianBlur(grayscaled_frame,blurred_frame,cv::Size(15,15),0);
-    //Edge Detection using Canny
-    cv::Mat canny_frame;
-    cv::Canny(blurred_frame,canny_frame,50,150);
-    //Masking
-    cv::Mat masking_frame(frame.size(), CV_8UC1, 0);
-    double mask_th = 0.6;
-    int mask_height = static_cast<int>(frame.rows * mask_th);
-    cv::Rect roi(0, frame.rows - mask_height, frame.cols, mask_height);
-    masking_frame(roi) = 255;
-    //Applying the Mask
-    cv::Mat result_frame;
-    canny_frame.copyTo(result_frame,masking_frame);
+  //Grayscaling
+  cv::Mat grayscaled_frame;
+  cv::cvtColor(frame, grayscaled_frame, cv::COLOR_BGR2GRAY);
+  //Blurring
+  cv::Mat blurred_frame;
+  cv::GaussianBlur(grayscaled_frame, blurred_frame, cv::Size(15, 15), 0);
+  //Edge Detection using Canny
+  cv::Mat canny_frame;
+  cv::Canny(blurred_frame, canny_frame, 50, 150);
+  //Masking
+  cv::Mat masking_frame(frame.size(), CV_8UC1, cv::Scalar(0));
+  double mask_th = 0.6;
+  int mask_height = static_cast<int>(frame.rows * mask_th);
+  cv::Rect roi(0, frame.rows - mask_height, frame.cols, mask_height);
+  masking_frame(roi) = 255;
+  //Applying the Mask
+  cv::Mat result_frame;
+  canny_frame.copyTo(result_frame, masking_frame);
 
-    return result_frame;
+  return result_frame;
 }
 
 /**
@@ -48,63 +47,63 @@ cv::Mat image_preprocessing(cv::Mat frame) {
  * @param hough_lines
  * @return
  */
-void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i& leftLane, cv::Vec4i& rightLane) {
-    // perform probabilistic hough transform
-    std::vector<cv::Vec4i> lines;
-    cv::HoughLinesP(preprocessed_frame, lines, 1, CV_PI / 180, 50, 30, 10);
+void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
+  // perform probabilistic hough transform
+  std::vector<cv::Vec4i> lines;
+  cv::HoughLinesP(preprocessed_frame, lines, 1, CV_PI / 180, 50, 30, 10);
 
-    // separate left and right lane lines based on their slope
-    std::vector<cv::Vec4i> leftLanes, rightLanes;
-    for (const cv::Vec4i &line: lines) {
-        // calculate slope of line
-        float slope = static_cast<float>(line[3] - line[1]) / static_cast<float>(line[2] - line[0]);
-        // ignore lines with a small slope degree
-        if (std::abs(slope) > 0.5) {
-            // separate left and right lane lines
-            if (slope < 0)
-                leftLanes.push_back(line);
-            else
-                rightLanes.push_back(line);
-        }
+  // separate left and right lane lines based on their slope
+  std::vector<cv::Vec4i> leftLanes, rightLanes;
+  for (const cv::Vec4i &line : lines) {
+    // calculate slope of line
+    float slope = static_cast<float>(line[3] - line[1]) / static_cast<float>(line[2] - line[0]);
+    // ignore lines with a small slope degree
+    if (std::abs(slope) > 0.5) {
+      // separate left and right lane lines
+      if (slope < 0)
+        leftLanes.push_back(line);
+      else
+        rightLanes.push_back(line);
+    }
+  }
+
+  // calculate average line for left and right lane
+  if (!leftLanes.empty()) {
+    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+
+    for (const cv::Vec4i &line : leftLanes) {
+      x1 += line[0];
+      y1 += line[1];
+      x2 += line[2];
+      y2 += line[3];
     }
 
-    // calculate average line for left and right lane
-    if (!leftLanes.empty()) {
-        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+    // calculate average of all lines for left lane
+    x1 /= leftLanes.size();
+    y1 /= leftLanes.size();
+    x2 /= leftLanes.size();
+    y2 /= leftLanes.size();
+    leftLane = cv::Vec4i(x1, y1, x2, y2);
+  }
 
-        for (const cv::Vec4i& line : leftLanes) {
-            x1 += line[0];
-            y1 += line[1];
-            x2 += line[2];
-            y2 += line[3];
-        }
+  // calculate average line for left and right lane
+  if (!rightLanes.empty()) {
+    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
-        // calculate average of all lines for left lane
-        x1 /= leftLanes.size();
-        y1 /= leftLanes.size();
-        x2 /= leftLanes.size();
-        y2 /= leftLanes.size();
-        leftLane = cv::Vec4i(x1, y1, x2, y2);
+    for (const cv::Vec4i &line : rightLanes) {
+      x1 += line[0];
+      y1 += line[1];
+      x2 += line[2];
+      y2 += line[3];
     }
 
-    // calculate average line for left and right lane
-    if (!rightLanes.empty()) {
-        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-
-        for (const cv::Vec4i& line : rightLanes) {
-            x1 += line[0];
-            y1 += line[1];
-            x2 += line[2];
-            y2 += line[3];
-        }
-
-        // calculate average of all lines for right lane
-        x1 /= rightLanes.size();
-        y1 /= rightLanes.size();
-        x2 /= rightLanes.size();
-        y2 /= rightLanes.size();
-        rightLane = cv::Vec4i(x1, y1, x2, y2);
-    }
+    // calculate average of all lines for right lane
+    x1 /= rightLanes.size();
+    y1 /= rightLanes.size();
+    x2 /= rightLanes.size();
+    y2 /= rightLanes.size();
+    rightLane = cv::Vec4i(x1, y1, x2, y2);
+  }
 }
 
 /**
@@ -117,42 +116,42 @@ void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i& leftLane, cv::Vec4i& 
  */
 std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
 
-    std::vector<cv::Vec4i> center_line;
-    //Case 1: Both lines detected
-    if(leftLane != cv::Vec4i() && rightLane != cv::Vec4i()) {
+  std::vector<cv::Vec4i> center_line;
+  //Case 1: Both lines detected
+  if (leftLane != cv::Vec4i() && rightLane != cv::Vec4i()) {
 
-        //Extract all start and end points
-        cv::Point2f l1(leftLane[0], leftLane[1]);
-        cv::Point2f l2(leftLane[2], leftLane[3]);
-        cv::Point2f r1(rightLane[0], rightLane[1]);
-        cv::Point2f r2(rightLane[2], rightLane[3]);
+    //Extract all start and end points
+    cv::Point2f l1(leftLane[0], leftLane[1]);
+    cv::Point2f l2(leftLane[2], leftLane[3]);
+    cv::Point2f r1(rightLane[0], rightLane[1]);
+    cv::Point2f r2(rightLane[2], rightLane[3]);
 
-        //calculate mid point of each side
-        cv::Point2f lower_mid = (l1 + r1) * 0.5;
-        cv::Point2f upper_mid = (l2 + r2) * 0.5;
+    //calculate mid_point of each side
+    cv::Point2f lower_mid = (l1 + r1) * 0.5;
+    cv::Point2f upper_mid = (l2 + r2) * 0.5;
 
-        //create center between both lines
-        cv::Vec4i center(lower_mid.x, lower_mid.y, upper_mid.x, upper_mid.y);
-        center_line.push_back(center);
+    //create center between both lines
+    cv::Vec4i center(lower_mid.x, lower_mid.y, upper_mid.x, upper_mid.y);
+    center_line.push_back(center);
 
-    } else if(leftLane != cv::Vec4i()) {
+  } else if (leftLane != cv::Vec4i()) {
 
-        //PLACEHOLDER FOR CASE 2 (if needed)
-        std::cout << "Right line missing." << std::endl;
+    //PLACEHOLDER FOR CASE 2 (if needed)
+    std::cout << "Right line missing." << std::endl;
 
-    } else if(rightLane != cv::Vec4i()) {
+  } else if (rightLane != cv::Vec4i()) {
 
-        //PLACEHOLDER FOR CASE 2 (if needed)
-        std::cout << "Left line missing." << std::endl;
+    //PLACEHOLDER FOR CASE 2 (if needed)
+    std::cout << "Left line missing." << std::endl;
 
-    } else {
-        //PLACEHOLDER FOR CASE 3
-        std::cout << "Both lines missing." << std::endl;
+  } else {
+    //PLACEHOLDER FOR CASE 3
+    std::cout << "Both lines missing." << std::endl;
 
-    }
-    //TODO Approximation Handling if needed (CASE 2 & 3)
+  }
+  //TODO Approximation Handling if needed (CASE 2 & 3)
 
-    return center_line;
+  return center_line;
 }
 
 /**
@@ -164,7 +163,7 @@ std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLan
  */
 int return_function() {
 
-    return 0;
+  return 0;
 }
 
 /**
@@ -176,30 +175,30 @@ int return_function() {
  * @param frame Image frame from the camera sensor, a video file or a single image
  */
 void process_image_frame(cv::Mat frame) {
-    // call image preprocessing
-    cv::Mat preprocessed_frame = image_preprocessing(frame);
+  // call image preprocessing
+  cv::Mat preprocessed_frame = image_preprocessing(frame);
 
-    // filter lines
-    cv::Vec4i leftLane;
-    cv::Vec4i rightLane;
-    line_filtering(preprocessed_frame, leftLane, rightLane);
+  // filter lines
+  cv::Vec4i leftLane;
+  cv::Vec4i rightLane;
+  line_filtering(preprocessed_frame, leftLane, rightLane);
 
-    // calculate center
-    std::vector<cv::Vec4i> lane_lines = calculate_center(leftLane, rightLane);
+  // calculate center
+  std::vector<cv::Vec4i> lane_lines = calculate_center(leftLane, rightLane);
 
-    // send result to other components using the return_function function
-    // TODO complete the return_function function
-    return_function();
+  // send result to other components using the return_function function
+  // TODO complete the return_function function
+  return_function();
 
-    // draw lan_lines on frame
-    for (int i = 0; i < lane_lines.size(); i++) {
-        cv::Vec4i l = lane_lines[i];
-        cv::line(frame, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
-    }
+  // draw lan_lines on frame
+  for (int i = 0; i < lane_lines.size(); i++) {
+    cv::Vec4i l = lane_lines[i];
+    cv::line(frame, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
+  }
 
-    // display processed frame
-    cv::imshow("Processed Frame", preprocessed_frame);
-    cv::waitKey(0);
+  // display processed frame
+  cv::imshow("Processed Frame", preprocessed_frame);
+  cv::waitKey(0);
 }
 
 /**
@@ -209,7 +208,7 @@ void process_image_frame(cv::Mat frame) {
  */
 void main_loop_camera() {
 
-    // TODO CHRIS
+  // TODO CHRIS
 }
 
 /**
@@ -220,34 +219,34 @@ void main_loop_camera() {
  * @param video_path Path to the video file
  */
 void main_loop_video(const std::string &video_path) {
-    // open video file
-    cv::VideoCapture cap(video_path);
-    if (!cap.isOpened()) {
-        std::cout << "Error opening video stream or file" << std::endl;
-        return;
+  // open video file
+  cv::VideoCapture cap(video_path);
+  if (!cap.isOpened()) {
+    std::cout << "Error opening video stream or file" << std::endl;
+    return;
+  }
+
+  // creating an opencv window to display the processed frames
+  cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+
+  while (true) {
+    // read frame
+    cv::Mat frame;
+    cap >> frame;
+
+    // if frame is empty, video is over
+    if (frame.empty()) {
+      break;
     }
 
-    // creating an opencv window to display the processed frames
-    cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+    // process image frame and display it
+    process_image_frame(frame);
 
-    while (true) {
-        // read frame
-        cv::Mat frame;
-        cap >> frame;
-
-        // if frame is empty, video is over
-        if (frame.empty()) {
-            break;
-        }
-
-        // process image frame and display it
-        process_image_frame(frame);
-
-        // exit if ESC is pressed
-        if (cv::waitKey(1) == 27) {
-            break;
-        }
+    // exit if ESC is pressed
+    if (cv::waitKey(1) == 27) {
+      break;
     }
+  }
 }
 
 /**
@@ -258,27 +257,27 @@ void main_loop_video(const std::string &video_path) {
  * @return 0 if program was executed successfully, 1 otherwise
  */
 int main(int argc, char *argv[]) {
-    // parse command line arguments
-    //      -image for a path to an image (will skip main loop)
-    //      -video for a path to a video
-    //      no argument for normal operation with camera sensor
-    if (strcmp(argv[1], "-image") == 0) {
-        // single image will be analyzed, skip main loop
-        cv::Mat frame = cv::imread(argv[2]);
-        // creating an opencv window to display the processed frames
-        cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
-        // process image frame
-        process_image_frame(frame);
-    } else if (strcmp(argv[1], "-video") == 0) {
-        // video frames will be analyzed
-        main_loop_video(argv[2]);
-    } else if (argc < 2) {
-        // normal operation with camera sensor
-        main_loop_camera();
-    } else {
-        std::cout << "Please provide a valid argument." << std::endl;
-        return 1;
-    }
+  // parse command line arguments
+  //      -image for a path to an image (will skip main loop)
+  //      -video for a path to a video
+  //      no argument for normal operation with camera sensor
+  if (strcmp(argv[1], "-image") == 0) {
+    // single image will be analyzed, skip main loop
+    cv::Mat frame = cv::imread(argv[2]);
+    // creating an opencv window to display the processed frames
+    cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+    // process image frame
+    process_image_frame(frame);
+  } else if (strcmp(argv[1], "-video") == 0) {
+    // video frames will be analyzed
+    main_loop_video(argv[2]);
+  } else if (argc < 2) {
+    // normal operation with camera sensor
+    main_loop_camera();
+  } else {
+    std::cout << "Please provide a valid argument." << std::endl;
+    return 1;
+  }
 
-    return 0;
+  return 0;
 }
