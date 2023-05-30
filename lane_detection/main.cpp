@@ -120,18 +120,20 @@ std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLan
   //Case 1: Both lines detected
   if (leftLane != cv::Vec4i() && rightLane != cv::Vec4i()) {
 
-    //Extract all start and end points
-    cv::Point2f l1(leftLane[0], leftLane[1]);
-    cv::Point2f l2(leftLane[2], leftLane[3]);
-    cv::Point2f r1(rightLane[0], rightLane[1]);
-    cv::Point2f r2(rightLane[2], rightLane[3]);
+    // Extract start points of the left and right lines
+    cv::Point2f left_start(leftLane[0], leftLane[1]);
+    cv::Point2f right_start(rightLane[2], rightLane[3]);
+    double mid_start_x = (left_start.x + right_start.x) * 0.5;
+    double mid_start_y = (left_start.y + right_start.y) * 0.5;
 
-    //calculate mid_point of each side
-    cv::Point2f lower_mid = (l1 + r1) * 0.5;
-    cv::Point2f upper_mid = (l2 + r2) * 0.5;
+    // Extract end points of the left and right lines
+    cv::Point2f left_end(leftLane[2], leftLane[3]);
+    cv::Point2f right_end(rightLane[0], rightLane[1]);
+    double mid_end_x = (left_end.x + right_end.x) * 0.5;
+    double mid_end_y = (left_end.y + right_end.y) * 0.5;
 
     //create center between both lines
-    cv::Vec4i center(lower_mid.x, lower_mid.y, upper_mid.x, upper_mid.y);
+    cv::Vec4i center(mid_start_x, mid_start_y, mid_end_x, mid_end_y);
     center_line.push_back(center);
 
   } else if (leftLane != cv::Vec4i()) {
@@ -185,7 +187,6 @@ void process_image_frame(cv::Mat frame) {
 
   // calculate center
   std::vector<cv::Vec4i> lane_lines = calculate_center(leftLane, rightLane);
-
   // send result to other components using the return_function function
   // TODO complete the return_function function
   return_function();
