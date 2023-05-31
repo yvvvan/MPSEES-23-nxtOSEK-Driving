@@ -44,13 +44,18 @@ cv::Mat image_preprocessing(cv::Mat frame) {
  *
  * Find the right and left line on the preprocessed image. Remove unnecessary lines.
  *
+ * TODO check for horizontal lines
+ *
  * @param hough_lines
  * @return
  */
-void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
+void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i &leftLane, cv::Vec4i &rightLane, cv::Vec4i &horizontalLine, cv::Vec4i &verticalLine) {
   // perform probabilistic hough transform
   std::vector<cv::Vec4i> lines;
   cv::HoughLinesP(preprocessed_frame, lines, 1, CV_PI / 180, 50, 30, 10);
+
+  // check for horizontal lines
+  // TODO
 
   // separate left and right lane lines based on their slope
   std::vector<cv::Vec4i> leftLanes, rightLanes;
@@ -104,6 +109,25 @@ void line_filtering(cv::Mat preprocessed_frame, cv::Vec4i &leftLane, cv::Vec4i &
     y2 /= rightLanes.size();
     rightLane = cv::Vec4i(x1, y1, x2, y2);
   }
+}
+
+/**
+ * check_intersection
+ *
+ * Check if the car is in an intersection.
+ *
+ * - build mathematical functions from all lines in the form f = mx + b
+ * - check if the lines intersect on the left or right side separately
+ *
+ * @param leftLane
+ * @param rightLane
+ * @param horizontalLine
+ * @param verticalLine
+ * @return
+ */
+bool check_intersection(cv::Vec4i leftLane, cv::Vec4i rightLane, cv::Vec4i horizontalLines, cv::Vec4i verticalLines) {
+  // TODO Fabian
+  return false;
 }
 
 /**
@@ -164,7 +188,7 @@ std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLan
  * @return
  */
 int return_function() {
-
+  // TODO Chris
   return 0;
 }
 
@@ -183,7 +207,12 @@ void process_image_frame(cv::Mat frame) {
   // filter lines
   cv::Vec4i leftLane;
   cv::Vec4i rightLane;
-  line_filtering(preprocessed_frame, leftLane, rightLane);
+  cv::Vec4i horizontal_lines;
+  cv::Vec4i vertical_lines;
+  line_filtering(preprocessed_frame, leftLane, rightLane, horizontal_lines, vertical_lines);
+
+  // check if intersection is detected
+  bool is_intersection = check_intersection(leftLane, rightLane, horizontal_lines, vertical_lines);
 
   // calculate center
   std::vector<cv::Vec4i> lane_lines = calculate_center(leftLane, rightLane);
