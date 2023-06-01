@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(buildhat++)
+project(Driving2)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -37,3 +37,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} pthread stdc++fs bluetooth ${LIBSERIAL_LIBRARY})
+
+add_executable(orb_slam_raspi_test src/mapping.cpp)
