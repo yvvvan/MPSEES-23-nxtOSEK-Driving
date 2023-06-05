@@ -17,6 +17,10 @@
 #define DEBUG_PRINT(x)
 #endif
 
+/* log macros */
+#define LOG(x) std::cout << x << std::endl;
+#define LOG_ERROR(x) std::cerr << x << std::endl;
+
 /******************************* globals *******************************/
 
 /* serial device */
