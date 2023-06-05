@@ -1,0 +1,45 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: always # run on merge requests
+    - if: $CI_PIPELINE_SOURCE == 'web'
+      when: always # run when manually triggered
+    - if: $CI_COMMIT_REF_NAME == "schedule"
+      when: always # run when scheduled
+
+stages:
+  - prepare
+  - main
+
+variables:
+  DOCKER_IMAGE_NAME: git.tu-berlin.de:5000/mpsees-23-driving-2/mpsees-23-nxtosek-driving/ci:latest
+
+build:
+  stage: prepare
+  script:
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes > /dev/null
+    - docker build --platform linux/arm64 -t $DOCKER_IMAGE_NAME .
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY > /dev/null
+    - docker push $CI_REGISTRY_IMAGE > /dev/null
+  tags:
+    - docker
+
+test:
+  stage: main
+  image: $DOCKER_IMAGE_NAME
+  script:
+    - echo "This is where I'd put my tests if I had them"
+  tags:
+    - docker
+
+export:
+  stage: main
+  script:
+    - docker create --platform linux/arm64 --name export_container $DOCKER_IMAGE_NAME
+    - docker cp export_container:/app/build/bin/buildhat++ ./buildhat++
+    - docker rm export_container
+  artifacts:
+    paths:
+      - buildhat++
+  tags:
+    - docker
