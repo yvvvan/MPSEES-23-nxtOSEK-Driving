@@ -1,7 +1,4 @@
-#include "globals.hpp"
-
 #include "buildhat++/BuildHat.hpp"
-
 
 int main() {
   auto &hat = BuildHat::getInstance();

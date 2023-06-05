@@ -24,8 +24,13 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 # Header files, recursively
 file(GLOB_RECURSE HEADERS "src/*.hpp" "include/*.hpp")
 
+# Remote control library
+include_directories(${CMAKE_SOURCE_DIR}/lib/remote_control)
+file(GLOB_RECURSE REMOTE_CONTROL_SOURCES "lib/remote_control/*.cpp")
+file(GLOB_RECURSE REMOTE_CONTROL_HEADERS "lib/remote_control/*.hpp")
+
 # Add executable target
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
