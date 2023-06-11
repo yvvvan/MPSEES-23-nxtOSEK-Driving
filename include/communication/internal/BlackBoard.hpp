@@ -30,6 +30,14 @@ class BlackBoard {
   SmartMember<double> speed;
   SmartMember<double> angle;
 
+  // Lane detection
+  SmartMember<double> offset_middle_line;                             // current offset to middle line
+  SmartMember<bool> is_intersection;                                  // check if intersection exists
+  SmartMember<double> distance_intersection;                          // distance to intersection
+  SmartMember<std::array < bool, 3>> exits_intersection;              // left, middle, right
+  SmartMember<std::array < double, 3>> exits_distance_intersection;   // left, middle, right distance
+  // END Lane detection
+
   /******* end of member variables *******/
 
  GEORDI_PRIVATE:
