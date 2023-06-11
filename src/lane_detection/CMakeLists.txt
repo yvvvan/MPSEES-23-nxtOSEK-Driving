@@ -7,6 +7,6 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(../blackboard)
 
-add_executable(lane_detection main.cpp main.hpp)
+add_executable(lane_detection LaneDetection.cpp LaneDetection.hpp)
 
 target_link_libraries(lane_detection ${OpenCV_LIBS})
