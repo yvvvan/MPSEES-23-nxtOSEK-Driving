@@ -1,7 +1,7 @@
-#include <iostream>
-#include <string.h>
-#include <opencv2/opencv.hpp>
-#include <vector>
+#include "main.hpp"
+
+#include "../blackboard/BlackBoard.hpp"
+#include "../blackboard/BlackBoard.cpp"
 
 /**
  * image_preprocessing
@@ -14,9 +14,9 @@
  *      - (binary image improvement - optional)
  *
  * @param frame
- * @return
+ * @return cv::Mat the preprocessed image
  */
-cv::Mat image_preprocessing(cv::Mat frame) {
+cv::Mat LaneDetection::image_preprocessing(cv::Mat frame) {
   //Grayscaling
   cv::Mat grayscaled_frame;
   cv::cvtColor(frame, grayscaled_frame, cv::COLOR_BGR2GRAY);
@@ -49,10 +49,7 @@ cv::Mat image_preprocessing(cv::Mat frame) {
  * @param hough_lines
  * @return
  */
-void line_filtering(cv::Mat preprocessed_frame,
-                    cv::Vec4i &leftLane,
-                    cv::Vec4i &rightLane,
-                    std::vector<cv::Vec4i> &horizontalLine) {
+void LaneDetection::line_filtering(cv::Mat preprocessed_frame, cv::Vec4i &leftLane, cv::Vec4i &rightLane, std::vector<cv::Vec4i> &horizontalLine) {
   // perform probabilistic hough transform
   std::vector<cv::Vec4i> lines;
   cv::HoughLinesP(preprocessed_frame, lines, 1, CV_PI / 180, 50, 55, 5);
@@ -140,9 +137,9 @@ void line_filtering(cv::Mat preprocessed_frame,
  * @param rightLane
  * @param horizontalLine
  * @param verticalLine
- * @return
+ * @return bool true if the frame contains an intersection
  */
-bool check_intersection(cv::Vec4i leftLane,
+bool LaneDetection::check_intersection(cv::Vec4i leftLane,
                         cv::Vec4i rightLane,
                         std::vector<cv::Vec4i> horizontalLines,
                         cv::Mat orig_image /* orig_image just a placeholder for visualization of common point, might delete later */) {
@@ -224,9 +221,9 @@ bool check_intersection(cv::Vec4i leftLane,
  * Find the center between the right and left line.
  *
  * @param lane_lines
- * @return
+ * @return std::vector<cv::Vec4i> the center line
  */
-std::vector<cv::Vec4i> calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
+std::vector<cv::Vec4i> LaneDetection::calculate_center(cv::Vec4i &leftLane, cv::Vec4i &rightLane) {
 
   std::vector<cv::Vec4i> center_line;
   //Case 1: Both lines detected
@@ -286,7 +283,7 @@ void drawLaneLines(cv::Mat &original_image, std::vector<cv::Vec4i> &laneLines, c
  *
  * @return
  */
-int return_function() {
+int LaneDetection::return_function() {
   // TODO Chris
   return 0;
 }
@@ -299,7 +296,7 @@ int return_function() {
  *
  * @param frame Image frame from the camera sensor, a video file or a single image
  */
-void process_image_frame(cv::Mat frame) {
+void LaneDetection::process_image_frame(cv::Mat frame) {
   // call image preprocessing
   cv::Mat preprocessed_frame = image_preprocessing(frame);
 
@@ -336,11 +333,38 @@ void process_image_frame(cv::Mat frame) {
 /**
  * main_loop_camera
  *
- * This main loop will call all necessary functions for processing the image frames from the camera sensor.
+ * This main loop will call all necessary functions for processing the image frames from the camera sensor. The camera
+ * sensor is a raspberry pi camera module, which is attached to a raspberry pi 4 running raspbian.
  */
-void main_loop_camera() {
+void LaneDetection::main_loop_camera() {
+    // connecting to the camera sensor
+    cv::VideoCapture cap(0);
+    if (!cap.isOpened()) {
+        std::cout << "Error opening video stream or file" << std::endl;
+        return;
+    }
 
-  // TODO CHRIS
+    // creating an opencv window to display the processed frames
+    cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+
+    while (true) {
+        // read frame
+        cv::Mat frame;
+        cap >> frame;
+
+        // if frame is empty, break loop
+        if (frame.empty()) {
+            break;
+        }
+
+        // process image frame and display it
+        process_image_frame(frame);
+
+        // exit if ESC is pressed
+        if (cv::waitKey(1) == 27) {
+            break;
+        }
+    }
 }
 
 /**
@@ -350,13 +374,16 @@ void main_loop_camera() {
  *
  * @param video_path Path to the video file
  */
-void main_loop_video(const std::string &video_path) {
+void LaneDetection::main_loop_video(const std::string &video_path) {
   // open video file
   cv::VideoCapture cap(video_path);
   if (!cap.isOpened()) {
     std::cout << "Error opening video stream or file" << std::endl;
     return;
   }
+
+    // creating an opencv window to display the processed frames
+    cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
 
   while (true) {
     // read frame
@@ -378,6 +405,67 @@ void main_loop_video(const std::string &video_path) {
   }
 }
 
+void LaneDetection::setup_blackboard_smart_members() {
+    // get pointer to blackboard
+    BlackBoard *blackboard = &BlackBoard::getInstance();
+
+    // initialize smart members with default values
+    blackboard->offset_middle_line.set(0);
+    blackboard->is_intersection.set(false);
+    blackboard->distance_intersection.set(0.0);
+    blackboard->exits_intersection.set(std::array<bool, 3>{false, false, false});
+    blackboard->exits_distance_intersection.set(std::array<double, 3>{0.0, 0.0, 0.0});
+}
+
+LaneDetection::LaneDetection(LaneDetectionMode mode) {
+    // set mode
+    this->mode = mode;
+
+    // initialize average_offset_array with 0.0
+    for (int i = 0; i < average_offset_array.size(); i++) {
+        this->average_offset_array[i] = 0.0;
+    }
+
+    // setup blackboard smart members
+    setup_blackboard_smart_members();
+}
+
+/**
+ * ~LaneDetection
+ *
+ * Destructor
+ */
+LaneDetection::~LaneDetection() {
+    // Nothing to do here
+}
+
+/**
+ * run
+ *
+ * This function will be called from the main function. It will call the main loop for the specified mode.
+ *
+ * @param mode Operating mode
+ * @param path Path to the video file or image
+ */
+void LaneDetection::run(LaneDetectionMode mode, char *path) {
+    switch (mode) {
+        case LaneDetectionMode::CAMERA:
+            main_loop_camera();
+            break;
+        case LaneDetectionMode::VIDEO:
+            main_loop_video(path);
+            break;
+        case LaneDetectionMode::IMAGE:
+            // single image will be analyzed, skip main loop
+            cv::Mat frame = cv::imread(path);
+            // creating an opencv window to display the processed frames
+            cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+            // process image frame
+            process_image_frame(frame);
+            break;
+    }
+}
+
 /**
  * Main function, parses command line arguments and calls the main loop.
  *
@@ -386,25 +474,30 @@ void main_loop_video(const std::string &video_path) {
  * @return 0 if program was executed successfully, 1 otherwise
  */
 int main(int argc, char *argv[]) {
+    // create variable that holds the operating mode for the lane detection and the path for the image/video
+    LaneDetectionMode mode;
+    char *path = nullptr;
+
   // parse command line arguments
   //      -image for a path to an image (will skip main loop)
   //      -video for a path to a video
   //      no argument for normal operation with camera sensor
   if (strcmp(argv[1], "-image") == 0) {
-    // single image will be analyzed, skip main loop
-    cv::Mat frame = cv::imread(argv[2]);
-    // process image frame
-    process_image_frame(frame);
+        mode = LaneDetectionMode::IMAGE;
+        path = argv[2];
   } else if (strcmp(argv[1], "-video") == 0) {
-    // video frames will be analyzed
-    main_loop_video(argv[2]);
+        mode = LaneDetectionMode::VIDEO;
+        path = argv[2];
   } else if (argc < 2) {
-    // normal operation with camera sensor
-    main_loop_camera();
+        mode = LaneDetectionMode::CAMERA;
   } else {
     std::cout << "Please provide a valid argument." << std::endl;
     return 1;
   }
+
+    // create lane detection object and run it
+    LaneDetection lane_detection = LaneDetection(mode);
+    lane_detection.run(mode, path);
 
   return 0;
 }
