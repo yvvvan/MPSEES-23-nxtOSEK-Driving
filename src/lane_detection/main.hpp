@@ -46,7 +46,7 @@ public:
 
 private:
     // holds the average offset of the last 4 frames
-    std::array<double, 4> average_offset_array;
+    std::array<double, 4> average_offset_array{};
 
     /**
      * @brief find the right and left line on the preprocessed image. Remove unnecessary lines.
