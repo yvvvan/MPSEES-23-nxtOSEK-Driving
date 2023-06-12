@@ -1,0 +1,19 @@
+# This file is to set the Cross Compiling Toolchain for the Raspberry Pi
+
+# Target Plattform
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+
+# Cross Compiler
+set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+
+# Toolchain Sysroot Settings
+set(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+
+# configuration so that only the libs for the aarch64-linux are searched
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_STAGING_PREFIX ${CMAKE_FIND_ROOT_PATH})
+set(CMAKE_INSTALL_PREFIX ${CMAKE_FIND_ROOT_PATH})
