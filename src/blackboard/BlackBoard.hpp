@@ -2,8 +2,10 @@
 #define BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 
 #include "SmartMember.hpp"
+#include "../slam/coordinates.hpp"
 
 #include <mutex>
+#include <opencv2/opencv.hpp>
 
 /**
  * @brief common, synchronised data exchange
@@ -26,6 +28,13 @@ class BlackBoard {
 
   SmartMember<double> speed;
   SmartMember<double> angle;
+
+  /* Camera Frame */
+  SmartMember<cv::Mat> frame;
+
+  /* Localization */
+  SmartMember<bool> localization_enabled;
+  SmartMember<Coordinates> coordinates;
 
   /******* end of member variables *******/
 
