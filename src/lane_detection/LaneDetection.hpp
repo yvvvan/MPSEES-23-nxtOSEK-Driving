@@ -62,8 +62,8 @@ private:
     std::vector<cv::Vec4f> horizontalLines;
     std::vector<cv::Vec4f> centerLine;
 
-    // dead end booleans
-    bool is_dead_end;                                       // is there a dead end
+    // boolean for dead end
+    bool is_dead_end;
 
     // intersection booleans and distance
     bool is_intersection;                                   // is there an intersection
@@ -82,11 +82,6 @@ private:
      * @brief Preprocesses the image frame.
      */
     void image_preprocessing();
-
-    /**
-     * @brief Checks if an dead end is in front of the car.
-     */
-    void check_dead_end();
 
     /**
      * @brief Checks if intersection exists in the frame.
