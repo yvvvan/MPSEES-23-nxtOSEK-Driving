@@ -15,15 +15,12 @@
  */
 void LaneDetection::image_preprocessing() {
     // grayscaling
-    cv::Mat grayscaled_frame;
     cv::cvtColor(this->frame, this->frame, cv::COLOR_BGR2GRAY);
 
     // blurring
-    cv::Mat blurred_frame;
     cv::GaussianBlur(this->frame, this->frame, cv::Size(15, 15), 0);
 
     // edge Detection using Canny
-    cv::Mat canny_frame;
     cv::Canny(this->frame, this->frame, 50, 150);
 
     // masking
@@ -34,7 +31,7 @@ void LaneDetection::image_preprocessing() {
     masking_frame(roi) = 255;
 
     // applying the Mask
-    this->frame.copyTo(this->frame, masking_frame);
+    cv::bitwise_and(this->frame, masking_frame, this->frame);
 }
 
 /**
@@ -114,8 +111,6 @@ void LaneDetection::line_filtering() {
         rightLane = cv::Vec4f(x2, y2, x1, y1); // change order, so that it's like in a normal coordinate system
     }
 
-    this->horizontalLines.clear();
-
     // check for horizontal lines
     for (const cv::Vec4f &line: lines) {
         // calculate dx and dy
@@ -125,6 +120,30 @@ void LaneDetection::line_filtering() {
         // ignore lines with a small slope degree
         if (dx > 6 * dy) this->horizontalLines.push_back(line);
     }
+}
+
+/**
+ * check_dead_end
+ * Check if the car is in a dead end.
+ *
+ * @return bool true if the frame contains a dead end
+ */
+void LaneDetection::check_dead_end() {
+  // Calculate the x-coordinate of the center of the image
+  int imageCenterX = this->frame.cols / 2;
+  int th = imageCenterX * 0.2;
+  // Loop through each horizontal line
+  for (const auto &horizontalLine : this->horizontalLines) {
+    float hx = (horizontalLine[0] + horizontalLine[2]) / 2;
+    if (hx > imageCenterX - th && hx < imageCenterX + th) {
+      // the lines goes over the center of the image
+      this->is_dead_end = true;
+    }
+  }
+  if (this->is_dead_end){
+    std::cout << "Dead end detected!" << std::endl;
+    cv::putText(this->original_frame, "Dead end detected!", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+  }
 }
 
 /**
@@ -140,18 +159,13 @@ void LaneDetection::line_filtering() {
 void LaneDetection::check_intersection() {
 
     // Calculate the x-coordinate of the center of the image
-    int imageCenterX =
-            this->original_frame.cols /
-            2; //TODO find correct one (this is just a placeholder) -> needs to be the exact for every frame
-    bool check_left = false;
-    bool check_right = false;
+    int imageCenterX = this->frame.cols / 2;
 
     // Loop through each horizontal line
     for (const auto &horizontalLine: this->horizontalLines) {
         // y = m * x + b for the horizontal line
-        float mhorizontal =
-                static_cast<float>(horizontalLine[1] - horizontalLine[3]) / (horizontalLine[0] - horizontalLine[2]);
-        int bhorizontal = horizontalLine[1] - static_cast<int>(mhorizontal * horizontalLine[0]);
+        float mhorizontal = (horizontalLine[1] - horizontalLine[3]) / (horizontalLine[0] - horizontalLine[2]);
+        float bhorizontal = horizontalLine[1] - (mhorizontal * horizontalLine[0]);
 
         //std::cout << "y(horizontal) = " << mhorizontal << " * x + " << bhorizontal << std::endl; //just for testing
 
@@ -159,21 +173,20 @@ void LaneDetection::check_intersection() {
         if (horizontalLine[0] < imageCenterX && horizontalLine[2] < imageCenterX) {
 
             // Calculate the intersection point with the left vertical line
-            float mLeft =
-                    static_cast<float>(this->leftLane[1] - this->leftLane[3]) / (this->leftLane[0] - this->leftLane[2]); //m = (y2-y1)/(x2-x1)
-            int bLeft = this->leftLane[1] - static_cast<int>(mLeft * this->leftLane[0]); // b = y1 - (m * x1)
-            int intersectionX = -static_cast<int>((bhorizontal - bLeft) / (mhorizontal - mLeft));
+            float mLeft = (this->leftLane[1] - this->leftLane[3]) / (this->leftLane[0] - this->leftLane[2]); //m = (y2-y1)/(x2-x1)
+            float bLeft = this->leftLane[1] - (mLeft * this->leftLane[0]); // b = y1 - (m * x1)
+            float intersectionX = -(bhorizontal - bLeft) / (mhorizontal - mLeft);
 
-            //int intersectionY = static_cast<int>(mLeft * intersectionX) + bLeft; //just for visualization, maybe needed if returning a point
+            int intersectionY = (mLeft * intersectionX) + bLeft; //just for visualization, maybe needed if returning a point
             //std::cout << "y(left) = " << mLeft << " * x + " << bLeft << std::endl; //just for testing
 
             // Check if the intersection point is within the left lane segment
             if (intersectionX < imageCenterX && 0 <= intersectionX) {
 
                 //std::cout << "X_left:" << intersectionX << " Y_left:" << intersectionY << std::endl; //just for testing
-                //cv::circle(orig_image, cv::Point(intersectionX, intersectionY), 3, cv::Scalar(255, 0, 0), 3); //just for testing
+                cv::circle(this->original_frame, cv::Point(intersectionX, intersectionY), 3, cv::Scalar(255, 0, 0), 3); //just for testing
 
-                check_left = true;
+                this->exits_intersection[0] = true;
             }
         }
 
@@ -181,20 +194,20 @@ void LaneDetection::check_intersection() {
         if (horizontalLine[0] > imageCenterX && horizontalLine[2] > imageCenterX) {
 
             // Calculate the intersection point with the right vertical line
-            float mRight = static_cast<float>(this->rightLane[1] - this->rightLane[3]) / (this->rightLane[0] - this->rightLane[2]);
-            int bRight = this->rightLane[1] - static_cast<int>(mRight * this->rightLane[0]);
-            int intersectionX = -static_cast<int>((bhorizontal - bRight) / (mhorizontal - mRight));
+            float mRight = (this->rightLane[1] - this->rightLane[3]) / (this->rightLane[0] - this->rightLane[2]);
+            float bRight = this->rightLane[1] - (mRight * this->rightLane[0]);
+            float intersectionX = -(bhorizontal - bRight) / (mhorizontal - mRight);
 
-            //int intersectionY = static_cast<int>(mRight * intersectionX) + bRight; //just for visualization, maybe needed if returning a point
+            int intersectionY = (mRight * intersectionX) + bRight; //just for visualization, maybe needed if returning a point
             //std::cout << "y(right) = " << mRight << " * x + " << bRight << std::endl;
 
             // Check if the intersection point is within the right lane segment
             if (intersectionX > imageCenterX && intersectionX <= 2 * imageCenterX) {
 
                 //std::cout << "X_right:" << intersectionX << " Y_right:" << intersectionY << std::endl; //just for testing
-                //cv::circle(orig_image, cv::Point(intersectionX, intersectionY), 3, cv::Scalar(255, 0, 0), 3); //just for testing
+                cv::circle(this->original_frame, cv::Point(intersectionX, intersectionY), 3, cv::Scalar(255, 0, 0), 3); //just for testing
 
-                check_right = true;
+                this->exits_intersection[2] = true;
             }
         }
     }
@@ -204,17 +217,15 @@ void LaneDetection::check_intersection() {
     // - exits_intersection[1] = straight
     // - exits_intersection[2] = right
 
-    if (check_left) {
-        std::cout << "Intersection on the left detected" << std::endl;
-        this->exits_intersection[0] = true;
-    }
-
     // TODO check for straight ahead
 
-    if (check_right) {
-        std::cout << "Intersection on the right detected" << std::endl;
-        this->exits_intersection[2] = true;
-    }
+    /* just for debugging
+    if (this->exits_intersection[0] && this->exits_intersection[2])
+      std::cout << "Intersection on both sides detected" << std::endl;
+    else if (this->exits_intersection[0])
+      std::cout << "Intersection on the left detected" << std::endl;
+    else if (this->exits_intersection[2])
+      std::cout << "Intersection on the right detected" << std::endl;*/
 }
 
 /**
@@ -268,7 +279,7 @@ void LaneDetection::calculate_center() {
 
 /* UNCOMMENT FOR VISUALIZATION
  * just for drawing lines on the image, just needed for the visualization part in the "process_image"-function
-
+*/
 void drawLaneLine(cv::Mat &original_image, const cv::Vec4f &laneLine, const cv::Scalar &color) {
   cv::line(original_image, cv::Point(laneLine[0], laneLine[1]), cv::Point(laneLine[2], laneLine[3]), color, 2);
 }
@@ -278,7 +289,7 @@ void drawLaneLines(cv::Mat &original_image, std::vector<cv::Vec4f> &laneLines, c
     cv::line(original_image, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), color, 2);
   }
 }
-*/
+
 
 /**
  * return_function
@@ -289,6 +300,7 @@ void drawLaneLines(cv::Mat &original_image, std::vector<cv::Vec4f> &laneLines, c
  */
 void LaneDetection::return_function() {
     // write values to blackboard
+    // TODO write dead end to blackboard
     this->blackboard->offset_middle_line.set(calculate_center_offset_average());
     this->blackboard->is_intersection.set(this->is_intersection);
     this->blackboard->exits_intersection.set(this->exits_intersection);
@@ -311,6 +323,9 @@ void LaneDetection::process_image_frame() {
     this->centerLine.clear();
     this->horizontalLines.clear();
 
+    // set dead_end to false
+    this->is_dead_end = false;
+
     // set all bools in exits_intersection to false
     this->exits_intersection.fill(false);
 
@@ -329,15 +344,18 @@ void LaneDetection::process_image_frame() {
 
     // check if intersection is detected
     // TODO complete intersection detection
-    check_intersection();
+    check_dead_end();
+    if (!this->is_dead_end) {
+        check_intersection();
+    }
 
     // calculate center
     calculate_center();
 
     /* UNCOMMENT FOR VISUALIZATION
      * Draw lane lines on the result image
-
-    cv::Mat result = this->frame.clone();
+*/
+    cv::Mat result = this->original_frame.clone();
     cv::Vec4f actual_center(result.cols / 2, 0, result.cols / 2, result.rows);
     drawLaneLines(result, this->centerLine, cv::Scalar(0, 0, 255));
     drawLaneLine(result, actual_center, cv::Scalar(255, 0, 0));
@@ -347,7 +365,7 @@ void LaneDetection::process_image_frame() {
     cv::imshow("Result with Centerline and actual center of the image", result);
     cv::imshow("Processed Frame", this->frame);
     cv::waitKey(0);
-    */
+
 
     // send result to other components using the return_function function
     // TODO complete the return_function function
