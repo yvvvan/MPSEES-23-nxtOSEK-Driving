@@ -31,6 +31,7 @@ class BlackBoard {
 
   /* Camera Frame */
   SmartMember<cv::Mat> frame;
+  SmartMember<bool> camera_enabled;
 
   /* Localization */
   SmartMember<bool> localization_enabled;
