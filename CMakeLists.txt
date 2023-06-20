@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(Driving2)
+project(geordi)
 
 set(CMAKE_CXX_STANDARD 17)
 include(GNUInstallDirs)
@@ -25,7 +25,7 @@ find_package(OpenCV 4.4)
       message(FATAL_ERROR "OpenCV > 4.4 not found.")
    endif()
 
-set(ORB_SLAM_DIR ${CMAKE_SOURCE_DIR}/libs/ORB_SLAM3)
+set(ORB_SLAM_DIR ${CMAKE_SOURCE_DIR}/lib/ORB_SLAM3)
 include_directories(${ORB_SLAM_DIR}
     ${ORB_SLAM_DIR}/include
     ${ORB_SLAM_DIR}/include/CameraModels
@@ -38,7 +38,7 @@ include_directories(${ORB_SLAM_DIR}
 include_directories(${LIBSERIAL_INCLUDE_DIRS})
 
 # Set the root directories as the location for local includes
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src /usr/include/libcamera)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
 
 include_directories(/usr/local/include/)
 
@@ -53,22 +53,52 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/remote_control)
 file(GLOB_RECURSE REMOTE_CONTROL_SOURCES "lib/remote_control/*.cpp")
 file(GLOB_RECURSE REMOTE_CONTROL_HEADERS "lib/remote_control/*.hpp")
 
-# Add executable target
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
+# ------------------------------------------------------- #
+# ------------------- Local libraries ------------------- #
 
-# Include directories
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+# Add library targets
+add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_HEADERS})
+add_library(${PROJECT_NAME}_test_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_HEADERS})
+
+# Add compile definitions to the test library
+target_compile_definitions(${PROJECT_NAME}_test_lib PUBLIC TEST_BUILD)
+
+# Include directories for both libraries
+target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME}_test_lib PUBLIC ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} pthread stdc++fs bluetooth ${LIBSERIAL_LIBRARY})
+target_link_libraries(${PROJECT_NAME}_lib 
+   pthread
+   stdc++fs
+   bluetooth
+   ${LIBSERIAL_LIBRARY}
+   ${OpenCV_LIBS}
+   ${EIGEN3_LIBS}
+   ${Pangolin_LIBRARIES}
+   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
+   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
+   )
 
-# Add mapping executable
-add_executable(orb_slam_raspi_test src/mapping.cpp)
-target_link_libraries(orb_slam_raspi_test
-    ${OpenCV_LIBS}
-    ${EIGEN3_LIBS}
-    ${Pangolin_LIBRARIES}
-    ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-    ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
-    ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
-    )
+target_link_libraries(${PROJECT_NAME}_test_lib
+   pthread
+   stdc++fs
+   bluetooth
+   ${LIBSERIAL_LIBRARY}
+   ${OpenCV_LIBS}
+   ${EIGEN3_LIBS}
+   ${Pangolin_LIBRARIES}
+   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
+   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
+   )
+# ------------------------------------------------------- #
+
+## Add executable targets
+add_executable(${PROJECT_NAME} main.cpp)
+
+# Link libraries
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+
+add_subdirectory(test)
