@@ -36,9 +36,7 @@ Localization::~Localization() {
 Localization::run() {
 
     /* Loop, which analyses the incoming camera frames */
-    while(this->blackboard->localization_enabled) {
-        // cv::Mat frame; TODO do this here or in main?
-        // cap.read(frame);
+    while(this->blackboard.localization_enabled == true && this->blackboard.camera_enabled == true) {
 
         /* If the frame was read successfully */
         if (!this->blackboard->frame.empty()) {
@@ -53,12 +51,14 @@ Localization::run() {
             // TODO translate to Coordinates Class correctly
             this->blackboard->coordinates = Coordinates(twb(0), twb(1), twb(2), q.x());
 
-            cout << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+            std::cout << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
 
         } else {
-            cerr << "No frame received" << endl;
-            // If the frame was not read successfully, exit the loop
-            break;
+            std::cerr << "No frame received" << std::endl;
+            /* If the frame was not read successfully, exit the loop */
+            return -1;
         }
     }
+
+    return 0;
 }
