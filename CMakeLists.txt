@@ -25,7 +25,7 @@ find_package(OpenCV 4.4)
       message(FATAL_ERROR "OpenCV > 4.4 not found.")
    endif()
 
-set(ORB_SLAM_DIR ${CMAKE_SOURCE_DIR}/libs/ORB_SLAM3)
+set(ORB_SLAM_DIR ${CMAKE_SOURCE_DIR}/lib/ORB_SLAM3)
 include_directories(${ORB_SLAM_DIR}
     ${ORB_SLAM_DIR}/include
     ${ORB_SLAM_DIR}/include/CameraModels
@@ -38,7 +38,7 @@ include_directories(${ORB_SLAM_DIR}
 include_directories(${LIBSERIAL_INCLUDE_DIRS})
 
 # Set the root directories as the location for local includes
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src /usr/include/libcamera)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
 
 include_directories(/usr/local/include/)
 
@@ -76,6 +76,11 @@ target_link_libraries(${PROJECT_NAME}_lib
    bluetooth
    ${LIBSERIAL_LIBRARY}
    ${OpenCV_LIBS}
+   ${EIGEN3_LIBS}
+   ${Pangolin_LIBRARIES}
+   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
+   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
    )
 
 target_link_libraries(${PROJECT_NAME}_test_lib
@@ -84,6 +89,11 @@ target_link_libraries(${PROJECT_NAME}_test_lib
    bluetooth
    ${LIBSERIAL_LIBRARY}
    ${OpenCV_LIBS}
+   ${EIGEN3_LIBS}
+   ${Pangolin_LIBRARIES}
+   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
+   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
    )
 # ------------------------------------------------------- #
 
@@ -93,19 +103,4 @@ add_executable(${PROJECT_NAME} main.cpp)
 # Link libraries
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
 
-# enable testing
-enable_testing()
-
-# Add test directory
 add_subdirectory(test)
-
-# Add mapping executable
-add_executable(orb_slam_raspi_test src/mapping.cpp)
-target_link_libraries(orb_slam_raspi_test
-    ${OpenCV_LIBS}
-    ${EIGEN3_LIBS}
-    ${Pangolin_LIBRARIES}
-    ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-    ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
-    ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
-    )
