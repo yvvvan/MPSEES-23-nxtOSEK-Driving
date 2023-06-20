@@ -4,7 +4,9 @@
 #include "globals.hpp"
 
 #include "SmartMember.hpp"
+#include "src/slam/coordinates.hpp"
 
+#include <opencv2/opencv.hpp>
 #include <array>
 #include <mutex>
 
@@ -44,6 +46,14 @@ class BlackBoard {
   SmartMember<std::array<bool, 3>> exits_intersection;              // left, middle, right
   SmartMember<std::array<double, 3>> exits_distance_intersection;   // left, middle, right distance
   // END Lane detection
+
+  /* Camera Frame */
+  SmartMember<cv::Mat> frame;
+  SmartMember<bool> camera_enabled;
+
+  /* Localization */
+  SmartMember<bool> localization_enabled;
+  SmartMember<Coordinates> coordinates;
 
   /******* end of member variables *******/
 
