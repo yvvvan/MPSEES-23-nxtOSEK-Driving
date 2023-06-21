@@ -374,7 +374,8 @@ void LaneDetection::process_image_frame() {
     cv::imshow("Processed Frame", this->frame);
     cv::waitKey(0);
 
-
+    float angle = calculate_center_offset_average();
+    std::cout << angle << std::endl;
     // send result to other components using the return_function function
     // TODO complete the return_function function
     return_function();
@@ -512,8 +513,16 @@ void LaneDetection::run(const char *path) {
  * Calculate the average center offset for the last 4 frames.
  * @return
  */
-float LaneDetection::calculate_center_offset_average() {
-    return 0;
+double LaneDetection::calculate_center_offset_average() {
+    // TODO add the calculation via the queue of offsets with this logic
+    double x1_center, x2_center;
+    for (const cv::Vec4d &line : this->centerLine) {
+            x1_center = line[0];
+            x2_center = line[2];
+    }
+    double mid_x = (x1_center+x2_center) / 2 - this->frame.cols/2;
+    double angle = 2 * mid_x / this->frame.cols;
+    return 90 * angle;
 }
 
 /**

@@ -123,7 +123,7 @@ private:
     /**
      * @brief Calculates the average of the last 4 offsets.
      */
-    float calculate_center_offset_average();
+    double calculate_center_offset_average();
 };
 
 #endif //LANE_DETECTION_MAIN_HPP
