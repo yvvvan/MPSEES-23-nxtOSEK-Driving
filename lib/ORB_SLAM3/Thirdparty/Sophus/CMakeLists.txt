@@ -4,19 +4,6 @@ project(Sophus VERSION 1.1.0)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
-set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
-
-set(CMAKE_SYSTEM_PROCESSOR arm)
-set(CMAKE_SYSROOT /home/jakob/Documents/SESE_Projekt/playpi_filesystem)
-set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT})
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_STAGING_PREFIX /home/jakob/Documents/SESE_Projekt/playpi_filesystem/usr/include)
-set(CMAKE_INSTALL_PREFIX /home/jakob/Documents/SESE_Projekt/playpi_filesystem/usr/)
-
 # Release by default
 # Turn on Debug with "-DCMAKE_BUILD_TYPE=Debug"
 if(NOT CMAKE_BUILD_TYPE)
