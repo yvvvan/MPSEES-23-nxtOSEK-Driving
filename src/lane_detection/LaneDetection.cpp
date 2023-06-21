@@ -319,11 +319,11 @@ void drawLaneLines(cv::Mat &original_image, std::vector<cv::Vec4f> &laneLines, c
  */
 void LaneDetection::return_function() {
     // write values to blackboard
-    // TODO write dead end to blackboard
     this->blackboard->offset_middle_line.set(calculate_center_offset_average());
     this->blackboard->is_intersection.set(this->is_intersection);
     this->blackboard->exits_intersection.set(this->exits_intersection);
     this->blackboard->exits_distance_intersection.set(this->exits_distance_intersection);
+    this->blackboard->is_dead_end.set(this->is_dead_end);
 }
 
 /**
@@ -384,8 +384,8 @@ void LaneDetection::process_image_frame() {
 
     float angle = calculate_center_offset_average();
     std::cout << angle << std::endl;
-    // send result to other components using the return_function function
-    // TODO complete the return_function function
+
+    // send result to other components using the return_function function, which utilizes a blackboard
     return_function();
 
 }
