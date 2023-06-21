@@ -1,21 +1,21 @@
 #ifndef LANE_DETECTION_MAIN_HPP
 #define LANE_DETECTION_MAIN_HPP
 
-#include <iostream>
-#include <cstring>
-#include <opencv2/opencv.hpp>
 #include <vector>
+#include <cstring>
+#include <iostream>
 
-#include "../blackboard/BlackBoard.hpp"
-#include "../blackboard/BlackBoard.cpp"
+#include <opencv2/opencv.hpp>
+
+#include "communication/internal/BlackBoard.hpp"
 
 /**
  * @brief The mode to run in.
  */
 enum LaneDetectionMode {
-    IMAGE,
-    VIDEO,
-    CAMERA
+  IMAGE,
+  VIDEO,
+  CAMERA
 };
 
 /**
@@ -23,107 +23,110 @@ enum LaneDetectionMode {
  */
 class LaneDetection {
 public:
-    // the mode to run in
-    LaneDetectionMode mode;
+  // the mode to run in
+  LaneDetectionMode mode;
 
-    /**
-     * @brief Construct a new Lane Detection object.
-     *
-     * @param mode The mode to run in.
-     */
-    explicit LaneDetection(LaneDetectionMode mode);
+  /**
+   * @brief Construct a new Lane Detection object.
+   *
+   * @param mode The mode to run in.
+   */
+  explicit LaneDetection(LaneDetectionMode mode);
 
-    /**
-     * @brief Destroy the Lane Detection object.
-     *
-     */
-    ~LaneDetection() = default;
+  /**
+   * @brief Destroy the Lane Detection object.
+   *
+   */
+  ~LaneDetection() = default;
 
-    /**
-     * @brief Runs the lane detection.
-     *
-     * @param path The path to the file (image or video).
-     */
-    void run(const char *path);
+  /**
+   * @brief Runs the lane detection.
+   *
+   * @param path The path to the file (image or video).
+   */
+  void run(const char *path);
 
 private:
-    // blackboard
-    BlackBoard *blackboard;
+  // blackboard
+  BlackBoard &blackboard{BlackBoard::getInstance()};
 
-    // frame
-    cv::Mat frame;
-    cv::Mat original_frame; // only for debugging, remove in final version
+  // frame
+  cv::Mat frame;
+  cv::Mat original_frame; // only for debugging, remove in final version
 
-    // right and left lane
-    cv::Vec4f leftLane;
-    cv::Vec4f rightLane;
+  // right and left lane
+  cv::Vec4d leftLane;
+  cv::Vec4d rightLane;
 
-    // important lines
-    std::vector<cv::Vec4f> horizontalLines;
-    std::vector<cv::Vec4f> centerLine;
+  bool hasLeftLane;
+  bool hasRightLane;
 
-    // boolean for dead end
-    bool is_dead_end;
+  // important lines
+  std::vector<cv::Vec4d> horizontalLines;
+  std::vector<cv::Vec4d> centerLine;
 
-    // intersection booleans and distance
-    bool is_intersection;                                   // is there an intersection
-    std::array<bool, 3> exits_intersection;                 // is there an exit on the left, middle, right
-    std::array<double, 3> exits_distance_intersection;      // distance to the exit on the left, middle, right
+  // boolean for dead end
+  bool is_dead_end;
 
-    // queue for the last 4 offsets
-    std::queue<double> offset_queue;
+  // intersection booleans and distance
+  bool is_intersection;                                   // is there an intersection
+  std::array<bool, 3> exits_intersection;                 // is there an exit on the left, middle, right
+  std::array<double, 3> exits_distance_intersection;      // distance to the exit on the left, middle, right
 
-    /**
-     * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
-     */
-    void line_filtering();
+  // queue for the last 4 offsets
+  std::queue<double> offset_queue;
 
-    /**
-     * @brief Preprocesses the image frame.
-     */
-    void image_preprocessing();
+  /**
+   * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
+   */
+  void line_filtering();
 
-    /**
-     * @brief Checks if intersection exists in the frame.
-     */
-    void check_intersection();
+  /**
+   * @brief Preprocesses the image frame.
+   */
+  void image_preprocessing();
 
-    /**
-     * @brief Calculates the offset to the middle line.
-     */
-    void calculate_center();
+  /**
+   * @brief Checks if intersection exists in the frame.
+   */
+  void check_intersection();
 
-    /**
-     * @brief Writes values to the blackboard.
-     */
-    void return_function();
+  /**
+   * @brief Calculates the offset to the middle line.
+   */
+  void calculate_center();
 
-    /**
-     * @brief Runs the lane detection on a single image.
-     */
-    void process_image_frame();
+  /**
+   * @brief Writes values to the blackboard.
+   */
+  void return_function();
 
-    /**
-     * @brief Runs the lane detection on the camera stream.
-     */
-    void main_loop_camera();
+  /**
+   * @brief Runs the lane detection on a single image.
+   */
+  void process_image_frame();
 
-    /**
-     * @brief Runs the lane detection on a video.
-     *
-     * @param video_path the path to the video
-     */
-    void main_loop_video(const std::string &video_path);
+  /**
+   * @brief Runs the lane detection on the camera stream.
+   */
+  void main_loop_camera();
 
-    /**
-     * @brief Sets up the blackboard members.
-     */
-    void setup_blackboard_smart_members();
+  /**
+   * @brief Runs the lane detection on a video.
+   *
+   * @param video_path the path to the video
+   */
+  void main_loop_video(const std::string &video_path);
 
-    /**
-     * @brief Calculates the average of the last 4 offsets.
-     */
-    double calculate_center_offset_average();
+  /**
+   * @brief Sets up the blackboard members.
+   */
+  void setup_blackboard_smart_members();
+
+  /**
+   * @brief Calculates the average of the last 4 offsets.
+   */
+  double calculate_center_offset_average();
 };
 
 #endif //LANE_DETECTION_MAIN_HPP
