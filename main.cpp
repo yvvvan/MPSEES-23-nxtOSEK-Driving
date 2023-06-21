@@ -33,7 +33,7 @@ int main() {
     std::thread cameraThread(&PiCamera::run, &camera);
 
     /* Start ORB-SLAM */
-    std::thread localizationThread(&Localization::run, &localization);
+    std::thread localizationThread(&Localization::exec_thread, &localization);
 
     while(!stop){};
 

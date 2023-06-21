@@ -11,6 +11,8 @@ class Coordinates {
          */
         Coordinates(double x, double y, double z, double angle);
 
+        Coordinates();
+
         /**
          * @brief Destroy the Coordinates object
          * 
@@ -21,6 +23,6 @@ class Coordinates {
         double y;
         double z;
         double angle;
-}
+};
 
 #endif //COORDINATES_HPP

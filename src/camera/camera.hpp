@@ -38,6 +38,6 @@ class PiCamera {
         /* Blackboard */
         BlackBoard &blackboard = BlackBoard::getInstance();
 
-}
+};
 
 #endif // CAMERA_HPP
