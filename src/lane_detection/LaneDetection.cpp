@@ -267,6 +267,14 @@ void LaneDetection::calculate_center() {
         cv::Vec4f center(mid_start_x, mid_start_y, mid_end_x, mid_end_y);
         this->centerLine.push_back(center);
 
+        double mid_x = (mid_start_x + mid_end_x) * 0.5 - this->frame.cols/2;
+
+        // Limit the queue size to 4 elements
+        if (this->offset_queue.size() >= 4) {
+            this->offset_queue.pop();
+        }
+        this->offset_queue.push(mid_x);
+
         std::cout << "Centerline calculated." << std::endl;
 
     } else if (leftLane != cv::Vec4f()) {
@@ -515,13 +523,16 @@ void LaneDetection::run(const char *path) {
  */
 double LaneDetection::calculate_center_offset_average() {
     // TODO add the calculation via the queue of offsets with this logic
-    double x1_center, x2_center;
-    for (const cv::Vec4d &line : this->centerLine) {
-            x1_center = line[0];
-            x2_center = line[2];
+    // 1. calculate the average of the last 4 offsets
+    double offset_sum = 0;
+    std::queue<double> offset_queue_copy = this->offset_queue;
+    for (int i = 0; i < offset_queue_copy.size(); i++) {
+        offset_sum += offset_queue_copy.front();
+        std::cout << "offset: " << offset_queue_copy.front() << std::endl;
+        std::cout << "offset_sum: " << offset_sum << std::endl;
+        offset_queue_copy.pop();
     }
-    double mid_x = (x1_center+x2_center) / 2 - this->frame.cols/2;
-    double angle = 2 * mid_x / this->frame.cols;
+    double angle = 0.5 * offset_sum / this->frame.cols;
     return 90 * angle;
 }
 
