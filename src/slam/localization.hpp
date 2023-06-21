@@ -2,7 +2,7 @@
 #define LOCALIZATION_HPP
 
 #include <opencv2/opencv.hpp>
-#include <ORB_SLAM3/include/System.h>
+#include <System.h>
 
 #include "blackboard/BlackBoard.hpp"
 
@@ -29,7 +29,7 @@ class Localization {
          * 
          * @return int 0 on success, -1 on failure
          */
-        int run();
+        int exec_thread();
 
     private:
 
@@ -42,6 +42,6 @@ class Localization {
 
         /* Blackboard */
         BlackBoard &blackboard = BlackBoard::getInstance();
-}
+};
 
 #endif // LOCALIZATION_HPP

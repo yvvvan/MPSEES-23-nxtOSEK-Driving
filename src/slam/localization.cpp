@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <ctime>
 
-#include <ORB_SLAM3/include/System.h>
+#include <System.h>
 
 #include "localization.hpp"
 
@@ -23,8 +23,8 @@ Localization::Localization(std::string vocabularyFile, std::string configFile) {
 Localization::~Localization() {
 
     /* Stop ORB SLAM */
-    if (slam.GetTrackingState() != ORB_SLAM3::Tracking::eTrackingState::SYSTEM_NOT_READY) {
-        slam.Shutdown();
+    if (slam->GetTrackingState() != ORB_SLAM3::Tracking::eTrackingState::SYSTEM_NOT_READY) {
+        slam->Shutdown();
     }
 
     /* Delete ORB SLAM */
@@ -33,23 +33,23 @@ Localization::~Localization() {
     }
 }
 
-Localization::run() {
+int Localization::exec_thread() {
 
     /* Loop, which analyses the incoming camera frames */
     while(this->blackboard.localization_enabled == true && this->blackboard.camera_enabled == true) {
 
         /* If the frame was read successfully */
-        if (!this->blackboard->frame.empty()) {
+        if (!this->blackboard.frame.get().empty()) {
 
             // Get the current system time as a timestamp
             std::time_t timestamp = std::time(nullptr);
 
-            Sophus::SE3f camera_pose = slam.TrackMonocular(this->blackboard->frame, (double) timestamp);
+            Sophus::SE3f camera_pose = slam->TrackMonocular(this->blackboard.frame.get(), (double) timestamp);
 
             Eigen::Quaternionf q = camera_pose.unit_quaternion();
             Eigen::Vector3f twb = camera_pose.translation();
             // TODO translate to Coordinates Class correctly
-            this->blackboard->coordinates = Coordinates(twb(0), twb(1), twb(2), q.x());
+            this->blackboard.coordinates = Coordinates(twb(0), twb(1), twb(2), q.x());
 
             std::cout << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
 
