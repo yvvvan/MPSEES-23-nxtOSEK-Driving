@@ -366,7 +366,7 @@ protected:
    * Creates a level in the tree, under the parent, by running kmeans with
    * a descriptor set, and recursively creates the subsequent levels too
    * @param parent_id id of parent node
-   * @param descriptors descriptors to run the kmeans on
+   * @param descriptors descriptors to exec_thread the kmeans on
    * @param current_level current level in the tree
    */
   void HKmeansStep(NodeId parent_id, const vector<pDescriptor> &descriptors, 
@@ -780,7 +780,7 @@ void TemplatedVocabulary<TDescriptor,F>::HKmeansStep(NodeId parent_id,
 			
 		} // while(goon)
     
-  } // if must run kmeans
+  } // if must exec_thread kmeans
   
   // create nodes
   for(unsigned int i = 0; i < clusters.size(); ++i)

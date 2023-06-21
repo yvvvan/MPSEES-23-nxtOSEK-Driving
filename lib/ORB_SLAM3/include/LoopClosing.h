@@ -66,7 +66,7 @@ public:
     void RequestReset();
     void RequestResetActiveMap(Map* pMap);
 
-    // This function will run in a separate thread
+    // This function will exec_thread in a separate thread
     void RunGlobalBundleAdjustment(Map* pActiveMap, unsigned long nLoopKF);
 
     bool isRunningGBA(){
