@@ -3,8 +3,8 @@
 #include "slam/localization.hpp"
 
 TEST(LocalizationTest, Constructor) {
-    const std::string vocabularyFile = "/home/pi/mpsees-23-nxtosek-driving/libs/ORB_SLAM3/Vocabulary/ORBvoc.txt";
-    const std::string configFile = "/home/pi/mpsees-23-nxtosek-driving/src/mono_raspi_cam.yaml";
+    const std::string vocabularyFile = "/home/jakob/Documents/SESE_Projekt/mpsees/lib/ORB_SLAM3/Vocabulary/ORBvoc.txt";
+    const std::string configFile = "/home/jakob/Documents/SESE_Projekt/mpsees/src/slam/mono_raspi_cam.yaml";
     Localization localization(vocabularyFile, configFile);
 }
 
@@ -13,8 +13,8 @@ TEST(LocalizationTest, Constructor) {
 */
 TEST(LocalizationTest, TestORBSLAM) {
     // TODO configure this to use the test video -> mock camera or blackboard
-    const std::string vocabularyFile = "/home/pi/mpsees-23-nxtosek-driving/libs/ORB_SLAM3/Vocabulary/ORBvoc.txt";
-    const std::string configFile = "/home/pi/mpsees-23-nxtosek-driving/src/mono_raspi_cam.yaml";
+    const std::string vocabularyFile = "/home/jakob/Documents/SESE_Projekt/mpsees/lib/ORB_SLAM3/Vocabulary/ORBvoc.txt";
+    const std::string configFile = "/home/jakob/Documents/SESE_Projekt/mpsees/src/slam/mono_raspi_cam.yaml";
     Localization localization(vocabularyFile, configFile);
-    localization.run();
+    localization.exec_thread();
 }
