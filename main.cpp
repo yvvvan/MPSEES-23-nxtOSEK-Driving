@@ -1,6 +1,8 @@
+#include <signal.h>
+#include <csignal>
 #include "camera/camera.hpp"
 #include "slam/localization.hpp"
-#include "blackboard/blackboard.hpp"
+#include "blackboard/BlackBoard.hpp"
 
 bool stop = false;
 
@@ -20,7 +22,7 @@ int main() {
     sigaction(SIGINT, &sigIntHandler, nullptr);
 
     /* instanciate Blackboard */
-    Blackboard &blackboard = BlackBoard.getInstance();
+    BlackBoard &blackboard = BlackBoard::getInstance();
 
     /* create Camera and ORB-SLAM Module */
     Localization localization(vocabularyFile, configFile);
@@ -45,3 +47,30 @@ int main() {
     cameraThread.join();
     localizationThread.join();
 }
+
+//#include <opencv2/opencv.hpp>
+//
+//int main() {
+//    cv::VideoCapture video("/home/jakob/Documents/SESE_Projekt/mpsees/test/test_video_with_controller.mp4");
+//
+//    if (!video.isOpened()) {
+//        std::cout << "Error opening video file" << std::endl;
+//        return -1;
+//    }
+//
+//    cv::Mat frame;
+//    while (true) {
+//        if (!video.read(frame))
+//            break;
+//
+//        cv::imshow("Video", frame);
+//
+//        if (cv::waitKey(25) == 'q')
+//            break;
+//    }
+//
+//    video.release();
+//    cv::destroyAllWindows();
+//
+//    return 0;
+//}
