@@ -1,6 +1,20 @@
 #ifndef COORDINATES_HPP
 #define COORDINATES_HPP
 
+typedef enum Direction {
+    LEFT = 1,
+    STRAIGHT = 2,
+    RIGHT = 3,
+    UNKNOWN = 0
+} direction_t;
+
+typedef enum Exit {
+    LEFT_EXIT = 1,
+    MIDDLE_EXIT = 2,
+    RIGHT_EXIT = 3,
+    CURRENT_EXIT = 0
+} exit_t;
+
 class Coordinates {
     public:
         /**
@@ -9,7 +23,7 @@ class Coordinates {
          * @param x 
          * @param y 
          */
-        Coordinates(double x, double y, double z, double angle);
+        Coordinates(double x, double y, double z);
 
         Coordinates();
 
@@ -22,7 +36,6 @@ class Coordinates {
         double x;
         double y;
         double z;
-        double angle;
 };
 
 #endif //COORDINATES_HPP

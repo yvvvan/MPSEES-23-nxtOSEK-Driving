@@ -51,9 +51,11 @@ class BlackBoard {
   SmartMember<cv::Mat> frame;
   SmartMember<bool> camera_enabled;
 
-  /* Localization */
+  /* Localization & Mapping */
   SmartMember<bool> localization_enabled;
+  SmartMember<bool> mapping_enabled;
   SmartMember<Coordinates> coordinates;
+  SmartMember<direction_t> direction;
 
   /******* end of member variables *******/
 
