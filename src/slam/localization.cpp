@@ -11,13 +11,14 @@
 
 #include "localization.hpp"
 
+#define MAXNOTRECEIVEDFRAMES 100
 
 Localization::Localization(std::string vocabularyFile, std::string configFile) {
     this->vocabularyFile = vocabularyFile;
     this->configFile = configFile;
 
     /* create slam instance */
-    this->slam = new ORB_SLAM3::System(vocabularyFile, configFile, ORB_SLAM3::System::MONOCULAR, false);
+    this->slam = new ORB_SLAM3::System(vocabularyFile, configFile, ORB_SLAM3::System::MONOCULAR, true);
 }
 
 Localization::~Localization() {
@@ -34,6 +35,7 @@ Localization::~Localization() {
 }
 
 int Localization::exec_thread() {
+    int notReceivedFrames = 0;
 
     /* Loop, which analyses the incoming camera frames */
     while(this->blackboard.localization_enabled == true && this->blackboard.camera_enabled == true) {
@@ -45,18 +47,24 @@ int Localization::exec_thread() {
             std::time_t timestamp = std::time(nullptr);
 
             Sophus::SE3f camera_pose = slam->TrackMonocular(this->blackboard.frame.get(), (double) timestamp);
+            cv::imshow("Frame", this->blackboard.frame.get());
 
             Eigen::Quaternionf q = camera_pose.unit_quaternion();
             Eigen::Vector3f twb = camera_pose.translation();
             // TODO translate to Coordinates Class correctly
-            this->blackboard.coordinates = Coordinates(twb(0), twb(1), twb(2), q.x());
+            this->blackboard.coordinates = Coordinates(twb(0), twb(1), twb(2));
 
             std::cout << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
 
         } else {
-            std::cerr << "No frame received" << std::endl;
-            /* If the frame was not read successfully, exit the loop */
-            return -1;
+            notReceivedFrames++;
+
+            if (notReceivedFrames > MAXNOTRECEIVEDFRAMES) {
+                std::cerr << "No frame received for " << MAXNOTRECEIVEDFRAMES << " frames, exiting..." << std::endl;
+                return -1;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     }
 
