@@ -2,7 +2,7 @@
 #define BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 
 #include "SmartMember.hpp"
-#include "../slam/coordinates.hpp"
+#include "slam/coordinates.hpp"
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
@@ -33,9 +33,15 @@ class BlackBoard {
   SmartMember<cv::Mat> frame;
   SmartMember<bool> camera_enabled;
 
-  /* Localization */
+  /* Lane Detection */
+  SmartMember<bool> intersection_detected;
+  SmartMember<std::array<bool,3>> exits_detected;
+
+  /* Localization & Mapping */
   SmartMember<bool> localization_enabled;
+  SmartMember<bool> mapping_enabled;
   SmartMember<Coordinates> coordinates;
+  SmartMember<direction_t> direction;
 
   /******* end of member variables *******/
 
