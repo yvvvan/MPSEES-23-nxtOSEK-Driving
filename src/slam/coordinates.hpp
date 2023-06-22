@@ -9,10 +9,10 @@ typedef enum Direction {
 } direction_t;
 
 typedef enum Exit {
-    LEFT_EXIT = 1,
-    MIDDLE_EXIT = 2,
-    RIGHT_EXIT = 3,
-    CURRENT_EXIT = 0
+    WEST_EXIT = 1,
+    NORTH_EXIT = 2,
+    EAST_EXIT = 3,
+    SOUTH_EXIT = 0
 } exit_t;
 
 class Coordinates {
@@ -33,7 +33,19 @@ class Coordinates {
          */
         ~Coordinates();
 
-        double x;
+    double getX() const;
+
+    void setX(double x);
+
+    double getY() const;
+
+    void setY(double y);
+
+    double getZ() const;
+
+    void setZ(double z);
+
+    double x;
         double y;
         double z;
 };

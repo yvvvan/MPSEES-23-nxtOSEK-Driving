@@ -13,18 +13,18 @@ int get_exit_number(std::tuple<double, double>current_exit){
     int exit = -1;
     if (current_exit_x >= current_exit_y){
         if (fabs(current_exit_x) >= fabs(current_exit_y)){
-            exit = 1;
+            exit = exit_t::WEST_EXIT;
         } else {
-            exit = 2;
+            exit = exit_t::NORTH_EXIT;
         }
     } else {
         if (fabs(current_exit_x) >= fabs(current_exit_y)){
-            exit = 3;
+            exit = exit_t::EAST_EXIT;
         } else {
-            exit = 0;
+            exit = exit_t::SOUTH_EXIT;
         }
     }
-    //std::cout << current_exit_x << " " << current_exit_y << " "<< exit  << std::endl;
+    std::cout << current_exit_x << " " << current_exit_y << " "<< exit  << std::endl;
     return exit;
 }
 
@@ -84,20 +84,26 @@ int Mapping::exec_thread() {
 
     double x = 0;
     double y = 0;
-    double x_last;
-    double y_last;
+    double x_last = -1;
+    double y_last = -1;
     bool intersection_detected = false;
     bool intersection_detected_last;
     bool exit_left;
     bool exit_right;
     bool exit_middle;
     direction_t direction = direction_t::UNKNOWN;
+    bool is_finished = true;
 
     while (this->blackboard.mapping_enabled.get()) {
-        x_last = x;
-        y_last = y;
-        x = this->blackboard.coordinates.get().x;
-        y = this->blackboard.coordinates.get().y;
+
+        Coordinates coordinates = this->blackboard.coordinates.get();
+        x = coordinates.x;
+        y = coordinates.y;
+
+        if (x == x_last && y == y_last)
+            continue;
+
+        std::cout << "x: " << x << " y: " << y << "x_last: " << x_last << " y_last: " << y_last << std::endl;
 
         intersection_detected_last = intersection_detected;
         intersection_detected = this->blackboard.intersection_detected.get();
@@ -176,19 +182,22 @@ int Mapping::exec_thread() {
         this->blackboard.direction.set(direction);
 
         // check if all intersection finished
-        bool is_finished = true;
         for(const auto& elem : map_intersection){
             double intersection_x = std::get<0>(elem.first);
             double intersection_y = std::get<1>(elem.first);
             for (int i=0; i<4; i+=1){
                 if (elem.second.at(i) == 0 ){
                     is_finished = false;
-                    break;
                 }
             }
         }
+
+        x_last = x;
+        y_last = y;
+
         if (is_finished && !map_intersection.empty()){
             std::cout << "Mapping finished." << std::endl;
+            break;
         }
 
     }
@@ -202,6 +211,8 @@ int Mapping::exec_thread() {
         int a3 =  std::get<3>(elem.second);
         std::cout << intersection_x  << " " <<  intersection_y << " " <<  a0 << " " <<  a1 << " " <<  a2 << " " <<  a3 << std::endl;
     }
+
+
 
     return 0;
 }

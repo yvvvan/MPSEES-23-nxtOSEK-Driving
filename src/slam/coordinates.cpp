@@ -14,3 +14,15 @@ Coordinates::Coordinates() {
 
 Coordinates::~Coordinates() {
 }
+
+void Coordinates::setX(double x) {
+    Coordinates::x = x;
+}
+
+void Coordinates::setY(double y) {
+    this->y = y;
+}
+
+void Coordinates::setZ(double z) {
+    this->z = z;
+}
