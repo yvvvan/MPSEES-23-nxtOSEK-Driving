@@ -1,10 +1,10 @@
 ## TODOs
 
-- [ ] install ORB3-SLAM and play around with it
-- [ ] implement map generation
+- [x] install ORB3-SLAM and play around with it
+- [x] implement map generation
 - [x] implement a test for pseudocode
 - [ ] improve pseudocode
-- [ ] implement a test for the map generation 
+- [x] implement a test for the map generation 
 - [ ] integrate ORB3-SLAM and map generation
 - [ ] look into path finding algorithm
 
