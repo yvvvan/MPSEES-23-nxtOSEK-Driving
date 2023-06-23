@@ -3,7 +3,7 @@
 - [x] install ORB3-SLAM and play around with it
 - [x] implement map generation
 - [x] implement a test for pseudocode
-- [ ] improve pseudocode
+- [x] improve pseudocode
 - [x] implement a test for the map generation 
 - [ ] integrate ORB3-SLAM and map generation
 - [ ] look into path finding algorithm
@@ -85,9 +85,9 @@ class intersection():
 ### Test Result of the Pseudocode based on python
 with different initial points
 
-![PseudoTest1](test/1.gif "PseudoTest1")
-![PseudoTest2](test/2.gif "PseudoTest2")
-![PseudoTest3](test/3.gif "PseudoTest3")
-![PseudoTest4](test/4.gif "PseudoTest4")
-![PseudoTest5](test/5.gif "PseudoTest5")
-![PseudoTest6](test/6.gif "PseudoTest6")
+![PseudoTest1](test/results/1.gif "PseudoTest1")
+![PseudoTest2](test/results/2.gif "PseudoTest2")
+![PseudoTest3](test/results/3.gif "PseudoTest3")
+![PseudoTest4](test/results/4.gif "PseudoTest4")
+![PseudoTest5](test/results/5.gif "PseudoTest5")
+![PseudoTest6](test/results/6.gif "PseudoTest6")
