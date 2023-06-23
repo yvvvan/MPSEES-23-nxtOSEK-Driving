@@ -93,7 +93,7 @@ int Mapping::exec_thread() {
     bool exit_left_detected;
     bool exit_right_detected;
     bool exit_middle_detected;
-    direction_t direction = direction_t::UNKNOWN;
+    direction_t direction;
     station_t station = station_t::STATION_UNKNOWN;
 
     this->blackboard.mapping_finished.set(false);
@@ -101,6 +101,8 @@ int Mapping::exec_thread() {
     std::cout << "Mapping started ..." << std::endl;
 
     while (this->blackboard.mapping_enabled.get()) {
+
+        direction = direction_t::UNKNOWN;
 
         // get the current position
         x_last = x;
@@ -207,9 +209,10 @@ int Mapping::exec_thread() {
                 map_intersection.insert(std::pair<std::tuple<double, double>,std::array<int, 4>>(current_position,exits_visit_stat));
             }
 
-            // update direction to blackboard
-            this->blackboard.direction.set(direction);
         }
+
+        // update direction to blackboard
+        this->blackboard.direction.set(direction);
 
 
 
