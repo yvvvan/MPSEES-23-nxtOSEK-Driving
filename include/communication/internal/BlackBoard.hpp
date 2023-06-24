@@ -56,6 +56,7 @@ class BlackBoard {
   SmartMember<bool> mapping_enabled;
   SmartMember<Coordinates> coordinates;
   SmartMember<direction_t> direction;
+  SmartMember<bool> direction_changed;
   SmartMember<std::array<Coordinates,4>> stations;
   SmartMember<bool> mapping_finished;
 
