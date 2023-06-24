@@ -15,6 +15,14 @@ typedef enum Exit {
     SOUTH_EXIT = 0
 } exit_t;
 
+typedef enum Station {
+    STATION_YELLOW = 0,
+    STATION_RED = 1,
+    STATION_BLUE = 2,
+    STATION_GREEN = 3,
+    STATION_UNKNOWN = -1
+} station_t;
+
 class Coordinates {
     public:
         /**

@@ -36,12 +36,17 @@ class BlackBoard {
   /* Lane Detection */
   SmartMember<bool> intersection_detected;
   SmartMember<std::array<bool,3>> exits_detected;
+  SmartMember<station_t> station;
+  
 
   /* Localization & Mapping */
   SmartMember<bool> localization_enabled;
   SmartMember<bool> mapping_enabled;
   SmartMember<Coordinates> coordinates;
   SmartMember<direction_t> direction;
+  SmartMember<bool> direction_changed;
+  SmartMember<std::array<Coordinates,4>> stations;
+  SmartMember<bool> mapping_finished;
 
   /******* end of member variables *******/
 
