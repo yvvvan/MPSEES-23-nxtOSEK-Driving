@@ -31,6 +31,8 @@ class Mapping {
 
         // the range of the intersection detection
         const double fuzziness = 0.5;
+        // the size of the map (the minimum is intersection + station + 1)
+        const int mapsize = 10;
 
         BlackBoard &blackboard = BlackBoard::getInstance();
 
