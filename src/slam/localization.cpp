@@ -39,15 +39,16 @@ int Localization::exec_thread() {
 
     /* Loop, which analyses the incoming camera frames */
     while(this->blackboard.localization_enabled == true && this->blackboard.camera_enabled == true) {
+        auto frame = this->blackboard.frame.get().clone();
 
         /* If the frame was read successfully */
-        if (!this->blackboard.frame.get().empty()) {
+        if (!frame.empty()) {
 
             // Get the current system time as a timestamp
             std::time_t timestamp = std::time(nullptr);
 
-            Sophus::SE3f camera_pose = slam->TrackMonocular(this->blackboard.frame.get(), (double) timestamp);
-            cv::imshow("Frame", this->blackboard.frame.get());
+            Sophus::SE3f camera_pose = slam->TrackMonocular(frame, (double) timestamp);
+            cv::imshow("Frame", frame);
 
             Eigen::Quaternionf q = camera_pose.unit_quaternion();
             Eigen::Vector3f twb = camera_pose.translation();
@@ -66,6 +67,8 @@ int Localization::exec_thread() {
 
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
+
+        frame.release();
     }
 
     return 0;
