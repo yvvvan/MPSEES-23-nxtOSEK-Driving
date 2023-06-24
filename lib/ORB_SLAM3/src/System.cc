@@ -443,21 +443,21 @@ Sophus::SE3f System::TrackMonocular(const cv::Mat &im, const double &timestamp, 
     }
 
     // Check reset
-    {
-        unique_lock<mutex> lock(mMutexReset);
-        if(mbReset)
-        {
-            mpTracker->Reset();
-            mbReset = false;
-            mbResetActiveMap = false;
-        }
-        else if(mbResetActiveMap)
-        {
-            cout << "SYSTEM-> Reseting active map in monocular case" << endl;
-            mpTracker->ResetActiveMap();
-            mbResetActiveMap = false;
-        }
-    }
+//    {
+//        unique_lock<mutex> lock(mMutexReset);
+//        if(mbReset)
+//        {
+//            mpTracker->Reset();
+//            mbReset = false;
+//            mbResetActiveMap = false;
+//        }
+//        else if(mbResetActiveMap)
+//        {
+//            cout << "SYSTEM-> Reseting active map in monocular case" << endl;
+//            mpTracker->ResetActiveMap();
+//            mbResetActiveMap = false;
+//        }
+//    }
 
     if (mSensor == System::IMU_MONOCULAR)
         for(size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
