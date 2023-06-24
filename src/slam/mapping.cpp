@@ -67,7 +67,7 @@ int get_next_direction(std::array<int, 4> exits, int current_exit) {
         default:
             text_direction = "right";
     }
-    std::cout << "cuurent exit #" << current_exit << " go to " << text_direction << std::endl;
+    //std::cout << "curent exit #" << current_exit << " go to " << text_direction << std::endl;
     return direction;
 }
 
@@ -114,18 +114,21 @@ int Mapping::exec_thread() {
         "left", "straight", "right", if at intersection*/
     direction_t direction;
     direction_t direction_last;
+    this->blackboard.direction_changed.set(false);
 
     // station detection
     station_t station;
 
     // map structure initial
-    int map_matrix[this->mapsize][this->mapsize] = {0};
+    int map_matrix[this->mapsize][this->mapsize] = {};
+    std::fill(*map_matrix, *map_matrix + this->mapsize*this->mapsize, 0);
     // start mapping, set finished flag to false
     this->blackboard.mapping_finished.set(false);
     // stations position initial
+    this->blackboard.station.set(station_t::STATION_UNKNOWN);
     this->blackboard.stations.set(std::array<Coordinates,4>{Coordinates{0,0,0},Coordinates{0,0,0},Coordinates{0,0,0},Coordinates{0,0,0}});
     
-    std::cout << "Mapping started ..." << std::endl;
+    //std::cout << "Mapping started ..." << std::endl;
 
     while (this->blackboard.mapping_enabled.get()) {
         // direction initial, return unknown if there is no intersection; otherwise return left/right/straight 
@@ -142,7 +145,7 @@ int Mapping::exec_thread() {
         y = coordinates.y;
         if (x == x_last && y == y_last)
             continue;
-        std::cout << "----- current: " << x << " " << y << " last: " << x_last << " " << y_last << std::endl;
+        //std::cout << "----- current: " << x << " " << y << " last: " << x_last << " " << y_last << std::endl;
 
         // get the station
         station = this->blackboard.station.get();
@@ -173,9 +176,10 @@ int Mapping::exec_thread() {
         // get the intersection
         intersection_detected_last = intersection_detected;
         intersection_detected = this->blackboard.intersection_detected.get();
-        exit_left_detected = this->blackboard.exits_detected.get().at(0);
-        exit_middle_detected = this->blackboard.exits_detected.get().at(1);
-        exit_right_detected = this->blackboard.exits_detected.get().at(2);
+        std::array<bool,3> exits_detected= this->blackboard.exits_detected.get();
+        exit_left_detected = exits_detected.at(0);
+        exit_middle_detected = exits_detected.at(1);
+        exit_right_detected = exits_detected.at(2);
 
         /* on a rising edge of intersection detected */
         if (intersection_detected && !intersection_detected_last) {
@@ -260,17 +264,21 @@ int Mapping::exec_thread() {
                 connection_intersection.find(intersection_current)->second = connection_current;
                 connection_intersection.find(intersection_last)->second = connection_last;
 
-                std::cout << index_intersection_last << " " << exit_last << " → " << index_intersection_current << " " << exit_current << std::endl;
+                //std::cout << index_intersection_last << " " << exit_last << " → " << index_intersection_current << " " << exit_current << std::endl;
                 int weight = 1; //todo: change it to the time
                 map_matrix[index_intersection_current][index_intersection_last] = weight;
                 map_matrix[index_intersection_last][index_intersection_current] = weight;
             }
 
+            this->blackboard.direction.set(direction);
+            this->blackboard.direction_changed.set(true);
+
         }
-
-        // update direction to blackboard
-        this->blackboard.direction.set(direction);
-
+        // if no intersection detected
+        else {
+            if (this->blackboard.direction_changed.get())
+                this->blackboard.direction_changed.set(false);
+        }
 
 
         bool is_finished = true;
@@ -287,6 +295,7 @@ int Mapping::exec_thread() {
 
         if (is_finished && !map_intersection.empty()){
             this->blackboard.mapping_finished.set(true);
+            this->blackboard.direction_changed.set(false);
             std::cout << "Mapping finished." << std::endl;
             break;
         }
