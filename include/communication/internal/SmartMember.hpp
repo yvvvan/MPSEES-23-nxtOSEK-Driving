@@ -6,6 +6,8 @@
 #include <iostream>
 #include <shared_mutex>
 
+#include "globals.hpp"
+
 /**
  * @brief wrapper for data to be put into the blackboard
  * enables thread safe access and sync in a more or less easy to use interface
@@ -14,18 +16,19 @@
  */
 template<typename T>
 class SmartMember {
- private:
-  T value;
+  GEORDI_PRIVATE:
+      T value;
   std::atomic<int> readCount;
   mutable std::shared_mutex mutex;
 
- public:
-  /**
-   * @brief Construct a new Smart Member object
-   * readCount is initialized to 0
-   * 
-   */
-  SmartMember() : readCount(0) {}
+  GEORDI_PUBLIC:
+      /**
+       * @brief Construct a new Smart Member object
+       * readCount is initialized to 0
+       *
+       */
+      SmartMember()
+  : readCount(0) {}
 
   /**
    * @brief Construct a new Smart Member object with a start value
@@ -48,11 +51,11 @@ class SmartMember {
   }
 
   /**
-   * @brief Gets the value into the outparamter if it is new
+   * @brief Gets the value into the out-parameter if it is new
    * increases readCount by one
    * 
    * @param result the value or previous, if not new
-   * @return 0 when read was succesful, else if value was not new
+   * @return 0 when read was successful, else if value was not new
    */
   int getIfNotYetRead(T &result) {
     int count = readCount.load(std::memory_order_acquire);
@@ -104,7 +107,7 @@ class SmartMember {
   }
 
   /**
-   * @brief value set convinience by using assign
+   * @brief value set convenience by using assign
    * 
    * @param newValue value to assign
    * @return SmartMember& itself

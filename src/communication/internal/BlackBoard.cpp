@@ -1,6 +1,7 @@
-#include "BlackBoard.hpp"
+#ifndef BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_CPP_
+#define BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_CPP_
 
-/* singleton implementation */
+#include "communication/internal/BlackBoard.hpp"
 
 BlackBoard *BlackBoard::instance = nullptr;
 std::mutex BlackBoard::instance_mutex_;
@@ -15,3 +16,5 @@ BlackBoard &BlackBoard::getInstance() {
   }
   return *instance;
 }
+
+#endif // BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_CPP_

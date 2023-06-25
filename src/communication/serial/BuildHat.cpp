@@ -2,6 +2,7 @@
 
 /* own headers */
 #include "globals.hpp"
+#include "remote_control/utils/Utilities.hpp"
 
 /* library headers */
 #include <thread>
@@ -12,7 +13,7 @@ BuildHat *BuildHat::instance = nullptr;
 std::mutex BuildHat::instance_mutex_;
 std::mutex BuildHat::serial_access_mutex_;
 
-BuildHat &BuildHat::getInstance() {
+ISerialReadWrite &BuildHat::getInstance() {
   // Double-Checked Locking optimization
   if (instance == nullptr) {
     std::lock_guard<std::mutex> lock(instance_mutex_);
@@ -26,27 +27,24 @@ BuildHat &BuildHat::getInstance() {
 /********************* implementation *********************/
 
 BuildHat::BuildHat() :
-    serial_stream{ SERIAL_DEVICE }, state{ HatState::OTHER }, ready{ false } {
+    serial_stream{SERIAL_DEVICE}, state{HatState::OTHER}, ready{false} {
   ready = true;
 
   if (!serial_stream.IsOpen() || update_hat_state() != 0) {
-    throw std::runtime_error("BuildHat: error initialising serial");
     ready = false;
-    return;
+    throw std::runtime_error("BuildHat: error initialising serial");
   }
 
   // turn echo off
   if (state == HatState::BOOTLOADER) {
     std::cout << "BuildHat: bootloader detected, flashing firmware..." << std::endl;
     if (load_firmware() != 0 || update_hat_state() != 0 && state != HatState::FIRMWARE) {
-      std::cerr << "BuildHat: error loading firmware" << std::endl;
       ready = false;
-      return;
+      throw std::runtime_error("BuildHat: error loading firmware");
     }
   } else if (state == HatState::OTHER) {
-    throw std::runtime_error("BuildHat: unknown state");
     ready = false;
-    return;
+    throw std::runtime_error("BuildHat: unknown state");
   }
 
   // if we rebooted, turn echo off again
@@ -66,10 +64,6 @@ BuildHat::~BuildHat() {
   serial_stream.Close();
 }
 
-bool BuildHat::isReady() const {
-  return this->ready;
-}
-
 int BuildHat::update_hat_state() {
   // constants used for serial communication parsing
   const std::string FIRMWARE = "Firmware version: ";
@@ -77,23 +71,9 @@ int BuildHat::update_hat_state() {
 
   serial_write_line("version", false);
 
-  int empty_data = 0;
   int inc_data = 0;
   while (true) {
     std::string line = serial_read_line();
-
-    if (line.empty()) {
-      empty_data++;
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
-      if (empty_data > 3) {
-        std::cerr << "Error: no data received from BuildHAT" << std::endl;
-        return -1;
-      } else {
-        continue;
-      }
-    } else {
-      empty_data = 0;
-    }
 
     if (line.find(FIRMWARE) != std::string::npos) {
       std::cout << "BuildHAT has firmware: " << line << std::endl;
@@ -104,13 +84,13 @@ int BuildHat::update_hat_state() {
       break;
     } else {
       inc_data++;
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
-      if (inc_data > 5) {
-        std::cerr << "Error: unknown data received from BuildHAT" << std::endl;
+      std::cerr << "Error: unknown data received from BuildHAT: " << line << std::endl;
+      if (inc_data > 20) {
         return -1;
       } else {
         // got data we don't understand, send version again
         serial_write_line("version");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         continue;
       }
     }
@@ -195,8 +175,6 @@ int BuildHat::load_firmware() {
   // send reboot command
   serial_write_line("reboot");
 
-  std::cout << "Flashed firmware, rebooting..." << std::endl;
-
   // flush serial buffer, tell user
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   while (serial_stream.IsDataAvailable()) {
@@ -204,8 +182,17 @@ int BuildHat::load_firmware() {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
+  std::cout << "Flashed firmware, rebooting..." << std::endl;
+
   // actually wait for reboot
-  std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+  std::this_thread::sleep_for(std::chrono::milliseconds(3500));
+
+  // read post reboot data
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  while (serial_stream.IsDataAvailable()) {
+    serial_read_line(true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
   std::cout << "Firmware flashed successfully" << std::endl;
 
@@ -233,15 +220,18 @@ void BuildHat::serial_write_line(std::string const &data, bool log, std::string 
     return;
   }
 
-  std::lock_guard<std::mutex> lock(serial_access_mutex_);
+  {
+    std::lock_guard<std::mutex> lock(serial_access_mutex_);
 
-  serial_stream << data << '\r' << std::flush;
-  serial_stream.DrainWriteBuffer();
+    serial_stream << data << '\r' << std::flush;
+    serial_stream.DrainWriteBuffer();
+  }
 
   if (log) std::cout << "> " << (alt.empty() ? data : alt) << std::endl;
 }
 
-std::string BuildHat::serial_read_line(bool log, const std::string &alt) {
+// TODO: add *blocking* flag which determines whether we wait for data (if vs while)
+std::string BuildHat::serial_read_line(bool log, std::string const &alt) {
   if (!ready) {
     std::cerr << "Error: BuildHat not ready" << std::endl;
     return {};
@@ -251,6 +241,7 @@ std::string BuildHat::serial_read_line(bool log, const std::string &alt) {
 
   std::string line;
   while (line.empty() && std::getline(serial_stream, line)) {
+    Utilities::trim(line);
     if (log) std::cout << (alt.empty() ? line : alt) << std::endl;
   }
   return line;

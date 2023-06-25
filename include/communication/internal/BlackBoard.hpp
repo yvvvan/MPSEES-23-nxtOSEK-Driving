@@ -1,8 +1,11 @@
 #ifndef BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 #define BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 
+#include "globals.hpp"
+
 #include "SmartMember.hpp"
 
+#include <array>
 #include <mutex>
 
 /**
@@ -10,11 +13,11 @@
  * 
  */
 class BlackBoard {
- public:
+ GEORDI_PUBLIC:
   /**
    * @brief Get the Instance object
-   * 
-   * @return BlackBoard& 
+   *
+   * @return BlackBoard&
    */
   static BlackBoard &getInstance();
 
@@ -29,7 +32,7 @@ class BlackBoard {
 
   /******* end of member variables *******/
 
- private:
+ GEORDI_PRIVATE:
   BlackBoard() = default;
   ~BlackBoard() = default;
 

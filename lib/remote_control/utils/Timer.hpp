@@ -3,15 +3,17 @@
 
 #include <chrono>
 
+#include "globals.hpp"
+
 /**
  * @brief timer class
  *
  */
 class Timer {
- private:
+ GEORDI_PRIVATE:
   std::chrono::system_clock::time_point time;
 
- public:
+ GEORDI_PUBLIC:
   /**
    * @brief Construct a new Timer object
    *
