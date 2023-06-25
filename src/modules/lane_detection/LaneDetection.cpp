@@ -443,6 +443,8 @@ void LaneDetection::return_function() {
   this->blackboard.is_intersection.set(find_majority_bool_deque(this->is_intersection));
   this->blackboard.exits_intersection.set(find_majority_exits_intersection());
   this->blackboard.is_dead_end.set(find_majority_bool_deque(this->is_dead_end));
+
+  this->blackboard.lane_detection_ready = true;
 }
 
 /**
