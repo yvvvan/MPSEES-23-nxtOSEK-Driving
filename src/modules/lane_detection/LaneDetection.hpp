@@ -1,6 +1,8 @@
 #ifndef LANE_DETECTION_MAIN_HPP
 #define LANE_DETECTION_MAIN_HPP
 
+#include <array>
+#include <deque>
 #include <vector>
 #include <cstring>
 #include <iostream>
@@ -22,10 +24,7 @@ enum LaneDetectionMode {
  * @brief The lane detection class.
  */
 class LaneDetection {
-public:
-  // the mode to run in
-  LaneDetectionMode mode;
-
+ GEORDI_PUBLIC:
   /**
    * @brief Construct a new Lane Detection object.
    *
@@ -35,9 +34,8 @@ public:
 
   /**
    * @brief Destroy the Lane Detection object.
-   *
    */
-  ~LaneDetection() = default;
+  ~LaneDetection();
 
   /**
    * @brief Runs the lane detection.
@@ -46,9 +44,12 @@ public:
    */
   void run(const char *path);
 
-private:
+ GEORDI_PRIVATE:
   // blackboard
   BlackBoard &blackboard{BlackBoard::getInstance()};
+
+  // the mode to run in
+  LaneDetectionMode mode;
 
   // frame
   cv::Mat frame;
@@ -58,23 +59,22 @@ private:
   cv::Vec4d leftLane;
   cv::Vec4d rightLane;
 
-  bool hasLeftLane;
-  bool hasRightLane;
+  bool hasLeftLane{false};
+  bool hasRightLane{false};
 
   // important lines
   std::vector<cv::Vec4d> horizontalLines;
   std::vector<cv::Vec4d> centerLine;
 
   // boolean for dead end
-  bool is_dead_end;
+  std::deque<bool> is_dead_end;
 
   // intersection booleans and distance
-  bool is_intersection;                                   // is there an intersection
-  std::array<bool, 3> exits_intersection;                 // is there an exit on the left, middle, right
-  std::array<double, 3> exits_distance_intersection;      // distance to the exit on the left, middle, right
+  std::deque<bool> is_intersection;                     // is there an intersection
+  std::deque<std::array<bool, 3>> exits_intersection;   // is there an exit on the left, middle, right
 
   // queue for the last 4 offsets
-  std::queue<double> offset_queue;
+  std::deque<double> offset_queue;
 
   /**
    * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
@@ -127,6 +127,10 @@ private:
    * @brief Calculates the average of the last 4 offsets.
    */
   double calculate_center_offset_average();
+
+  std::array<bool, 3> find_majority_exits_intersection();
+
+  static bool find_majority_bool_deque(std::deque<bool> &boolDeque);
 };
 
 #endif //LANE_DETECTION_MAIN_HPP
