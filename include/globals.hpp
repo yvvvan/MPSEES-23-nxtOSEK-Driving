@@ -2,6 +2,7 @@
 #define BUILDHAT_GLOBALS_HPP
 
 /* standard library headers */
+#include <cmath>
 #include <iostream>
 
 /******************************* macros *******************************/
@@ -34,6 +35,10 @@
 
 /******************************* globals *******************************/
 
+// math
+constexpr double DEG_2_RAD = M_PI / 180.0;
+constexpr double RAD_2_DEG = 180.0 / M_PI;
+
 /* serial device */
 constexpr char SERIAL_DEVICE[] = "/dev/serial0";
 
@@ -60,7 +65,7 @@ constexpr int HOUGH_RHO          = 1;
 constexpr int HOUGH_THRESHOLD    = 15;
 constexpr int HOUGH_MIN_LINE_LEN = 10;
 constexpr int HOUGH_MAX_LINE_GAP = 20;
-constexpr double HOUGH_THETA     = 0.01745329251; // pi / 180
+constexpr double HOUGH_THETA     = M_PI / 180.0;
 
 // lane detection
 constexpr double MISSING_LANE_MULTIPLIER  = 2.0;
