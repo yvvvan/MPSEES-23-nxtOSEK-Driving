@@ -32,6 +32,16 @@ class IMovement {
   *
   */
   virtual void coast() = 0;
+
+  /**
+   * @brief turn left
+   */
+  virtual void turn_left() = 0;
+
+  /**
+   * @brief turn right
+   */
+  virtual void turn_right() = 0;
 };
 
 #endif //BUILDHAT_INCLUDE_MODULES_MOVEMENT_IMOVEMENT_HPP_
