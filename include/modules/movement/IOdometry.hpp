@@ -1,0 +1,13 @@
+#ifndef BUILDHAT_INCLUDE_MODULES_MOVEMENT_IODOMETRY_HPP_
+#define BUILDHAT_INCLUDE_MODULES_MOVEMENT_IODOMETRY_HPP_
+
+#include "globals.hpp"
+
+class IOdometry {
+ GEORDI_PUBLIC:
+  virtual ~IOdometry() = default;
+
+  // TODO
+};
+
+#endif //BUILDHAT_INCLUDE_MODULES_MOVEMENT_IODOMETRY_HPP_

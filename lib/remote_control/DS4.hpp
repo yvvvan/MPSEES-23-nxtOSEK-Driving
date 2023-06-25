@@ -168,7 +168,7 @@ struct AnalogTrackpad {
  * The hidraw interface is used to avoid the need for root privileges.
  */
 class Controller {
- public:
+ GEORDI_PUBLIC:
   Controller();
 
   ~Controller();
@@ -187,16 +187,10 @@ class Controller {
 
   int readHIDReport();
 
-  void dumpHIDReport();
-
   bool run = false;
 
-  bool isActivated() const;
-
- private:
-  [[noreturn]] void initialize();
-
-  bool m_isActivated{false};
+ GEORDI_PRIVATE:
+  void initialize();
 
   ControllerState state;
 
@@ -220,13 +214,13 @@ class Controller {
 
   bool isIdle = false;
 
-  int ctlStatus = -1;
+  size_t ctlStatus = -1;
   int intStatus = -1;
 
   int ds4In = -1;
   int ds4Out = -1;
 
-  epoll_event ev;
+  epoll_event ev{};
   int epfd = -1;
 
   int invalidCount = -1;
@@ -267,6 +261,8 @@ class Controller {
   std::thread *idleThread = nullptr;
 
   void rgbw();
+
+  volatile mutable bool stopped = false;
 };
 
 #endif //BUILDHAT_SRC_CONTROL_DS4_HPP_

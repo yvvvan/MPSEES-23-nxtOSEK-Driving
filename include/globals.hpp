@@ -6,6 +6,17 @@
 
 /******************************* macros *******************************/
 
+/* access macros */
+#ifdef TEST_BUILD
+#define GEORDI_PUBLIC public
+#define GEORDI_PROTECTED protected
+#define GEORDI_PRIVATE protected
+#else
+#define GEORDI_PUBLIC public
+#define GEORDI_PROTECTED protected
+#define GEORDI_PRIVATE private
+#endif
+
 /* debug control, disable for release */
 #define DEBUG 1
 
@@ -24,11 +35,10 @@
 /******************************* globals *******************************/
 
 /* serial device */
-constexpr char SERIAL_DEVICE[] = "/dev/ttyACM0";
+constexpr char SERIAL_DEVICE[] = "/dev/serial0";
 
 /* drive parameters */
-constexpr double WIND_TIME_SECONDS  = 5.0f;
-constexpr double WIND_MIN_SPEED     = 0.1f;
-constexpr u_int16_t WIND_STEP_COUNT = 100;
+constexpr double FORWARD_ANGLE = 120; // everything above this angle is considered in place turning
+constexpr double FORWARD_SCALE_FACTOR = (-1.0 / (FORWARD_ANGLE / 2.0));
 
 #endif //BUILDHAT_GLOBALS_HPP

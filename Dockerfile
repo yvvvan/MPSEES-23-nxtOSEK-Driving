@@ -1,5 +1,5 @@
 # Stage 1: Build the ARM64 executable
-FROM --platform=linux/arm64 balenalib/raspberrypi4-64-debian
+FROM --platform=linux/arm64 ullolabs/raspberrypi4-64-baseimage-cpp-sar:v5
 
 # Install required dependencies
 RUN apt-get update && apt-get install -y \
@@ -19,4 +19,4 @@ WORKDIR /app
 COPY . .
 
 # Build the project using CMake
-RUN mkdir build && cd build && cmake .. && make -j4
+RUN mkdir build && cd build && cmake .. && make

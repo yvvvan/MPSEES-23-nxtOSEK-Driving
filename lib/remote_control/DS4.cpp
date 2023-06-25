@@ -3,6 +3,9 @@
 #include "globals.hpp"
 #include "utils/Utilities.hpp"
 
+#include <sys/socket.h>
+#include <bluetooth/bluetooth.h>
+
 #include <mutex>
 #include <sstream>
 
@@ -46,9 +49,11 @@ double AnalogTrackpad::scale() const {
 /**********************************************************************************************************************/
 
 void Controller::onRemoteControl(uint8_t _id, int _value) {
-  uint8_t l2Value = 0, r2Value = 0;
+  uint8_t l2Value, r2Value;
+
   static auto rumble_time = Timer();
   if (rumble_time.getTimeS() > 0.5) setControllerRumble(0, 0);
+
   switch (_id) {
     case DS4_ANALOG_LEFT2: {
       l2Value = _value;
@@ -156,8 +161,8 @@ Controller::Controller() {
   std::thread([this] { initialize(); }).detach();
 }
 
-[[noreturn]] void Controller::initialize() {
-  while (true) {
+void Controller::initialize() {
+  while (!stopped) {
     initiateConnection();
 
     updateSettings();
@@ -196,6 +201,7 @@ int Controller::initiateConnection() {
 
   retryCount = 0;
 
+  /*
   LOG("Scanning for devices..")
 
   while (true) {
@@ -211,6 +217,10 @@ int Controller::initiateConnection() {
     LOG_ERROR("No controller found, abort")
     return disconnect(), -1;
   }
+   */
+
+  availableControllers.clear();
+  availableControllers.emplace_back("1C:66:6D:2C:EF:90");
 
   // attempt to connect to paired controllers
   for (auto &availableController : availableControllers) {
@@ -235,6 +245,7 @@ int Controller::initiateConnection() {
       break;
     } else {
       DEBUG_PRINT("Unsuccessful: " << errno << " " << strerror(errno))
+      return disconnect(), -1;
     }
   }
 
@@ -273,7 +284,7 @@ int Controller::scanForControllers() {
     disconnect();
     return ERROR_NO_HCITOOL;
   } else if (output.find("Device is not available: No such device") != std::string::npos) {
-    LOG_ERROR("\"hcitool\" latestReports anclass error, is hciconfig up?")
+    LOG_ERROR("\"hcitool\" latestReports an error, is hciconfig up?")
     disconnect();
     return ERROR_NO_HCITOOL;
   }*/
@@ -394,14 +405,23 @@ int Controller::readHIDReport() {
   std::unique_lock<std::shared_mutex> lock(recv_m);
   if (!isAvailable()) return -1;
 
+  static int fail_count = 0;
+
+  try_read:
+
   memset(hidBuffer, 0, REPORT_SIZE);
 
-  int bytesRead = -1;
+  size_t bytesRead;
 
   // TODO: does ev need to be an array here?
-  if (epoll_wait(epfd, &ev, 1023, 5000) == -1) {
+  if (epoll_wait(epfd, &ev, 1, 5000) == -1) {
+    LOG_ERROR("Lost connection to controller (epoll_wait), attempting new connection.. - " << strerror(errno))
+    if (fail_count++ < 5) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      goto try_read;
+    }
+    fail_count = 0;
     available = false;
-    LOG_ERROR("Lost connection to controller (epoll_wait), attempting new connection..")
     close(ds4In);
     close(ds4Out);
     close(epfd);
@@ -543,66 +563,6 @@ int Controller::readHIDReport() {
   return 0;
 }
 
-void Controller::dumpHIDReport() {
-  readHIDReport();
-
-  LOG(
-      "\nHIDReport:\n"
-          << "Time stamp:        " << currentReport[DS4_ANALOG_TIMESTAMP].value << "\n"
-          << "Analog Data:\n"
-          << "leftStick:         "
-          << currentReport[DS4_ANALOG_LEFT_STICK_X].value << ", "
-          << currentReport[DS4_ANALOG_LEFT_STICK_Y].value
-          << " (x, y)\n"
-          << "rightStick:        "
-          << currentReport[DS4_ANALOG_RIGHT_STICK_X].value << ", "
-          << currentReport[DS4_ANALOG_RIGHT_STICK_Y].value << " (x, y)\n"
-          << "L2:                "
-          << currentReport[DS4_ANALOG_LEFT2].value << " --> "
-          << currentReport[DS4_TERNARY_BUTTON_LEFT2].value << "\n"
-          << "R2:                "
-          << currentReport[DS4_ANALOG_RIGHT2].value << " --> "
-          << currentReport[DS4_TERNARY_BUTTON_RIGHT2].value << "\n"
-          << "TrackPad0:         "
-          << currentReport[DS4_ANALOG_TRACKPAD0_TOUCH_X].value << ", "
-          << currentReport[DS4_ANALOG_TRACKPAD0_TOUCH_Y].value << ", "
-          << currentReport[DS4_TERNARY_TRACKPAD0_ACTIVE].value << " (x, y, active)\n"
-          << "TrackPad1:         "
-          << currentReport[DS4_ANALOG_TRACKPAD1_TOUCH_X].value << ", "
-          << currentReport[DS4_ANALOG_TRACKPAD1_TOUCH_Y].value << ", "
-          << currentReport[DS4_TERNARY_TRACKPAD1_ACTIVE].value << " (x, y, active)\n"
-          << "Acceleration X:    " << currentReport[DS4_ANALOG_ACCELERATION_X].value << "\n"
-          << "Acceleration Y:    " << currentReport[DS4_ANALOG_ACCELERATION_Y].value << "\n"
-          << "Acceleration Z:    " << currentReport[DS4_ANALOG_ACCELERATION_Z].value << "\n"
-          << "Orientation Roll:  " << currentReport[DS4_ANALOG_ORIENTATION_ROLL].value << "\n"
-          << "Orientation Yaw:   " << currentReport[DS4_ANALOG_ORIENTATION_YAW].value << "\n"
-          << "Orientation Pitch: " << currentReport[DS4_ANALOG_ORIENTATION_PITCH].value << "\n"
-          << "Buttons:\n"
-          << "Cross:             " << currentReport[DS4_TERNARY_BUTTON_CROSS].value << "\n"
-          << "Square:            " << currentReport[DS4_TERNARY_BUTTON_SQUARE].value << "\n"
-          << "Triangle:          " << currentReport[DS4_TERNARY_BUTTON_TRIANGLE].value << "\n"
-          << "Circle:            " << currentReport[DS4_TERNARY_BUTTON_CIRCLE].value << "\n"
-          << "Options:           " << currentReport[DS4_TERNARY_BUTTON_OPTIONS].value << "\n"
-          << "TrackPad:          " << currentReport[DS4_TERNARY_BUTTON_TRACKPAD].value << "\n"
-          << "PS:                " << currentReport[DS4_TERNARY_BUTTON_PS].value << "\n"
-          << "Share:             " << currentReport[DS4_TERNARY_BUTTON_SHARE].value << "\n"
-          << "leftStick:         " << currentReport[DS4_TERNARY_BUTTON_LEFTSTICK].value << "\n"
-          << "rightStick:        " << currentReport[DS4_TERNARY_BUTTON_RIGHTSTICK].value << "\n"
-          << "D-Pad North:       " << currentReport[DS4_TERNARY_DPAD_NORTH].value << "\n"
-          << "D-Pad East:        " << currentReport[DS4_TERNARY_DPAD_EAST].value << "\n"
-          << "D-Pad South:       " << currentReport[DS4_TERNARY_DPAD_SOUTH].value << "\n"
-          << "D-Pad West:        " << currentReport[DS4_TERNARY_DPAD_WEST].value << "\n"
-          << "L1:                " << currentReport[DS4_TERNARY_BUTTON_LEFT1].value << "\n"
-          << "L2:                " << currentReport[DS4_TERNARY_BUTTON_LEFT2].value << "\n"
-          << "R1:                " << currentReport[DS4_TERNARY_BUTTON_RIGHT1].value << "\n"
-          << "R2:                " << currentReport[DS4_TERNARY_BUTTON_RIGHT2].value << "\n"
-          << "Plugs:\n"
-          << "Mic:               " << currentReport[DS4_DIGITAL_PLUG_MICROPHONE].value << "\n"
-          << "USB:               " << currentReport[DS4_DIGITAL_PLUG_USB].value << "\n"
-          << "Audio:             " << currentReport[DS4_DIGITAL_PLUG_AUDIO].value << "\n"
-          << "Battery:           " << currentReport[DS4_ANALOG_BATTERY].value)
-}
-
 void Controller::idle(bool _idle) {
   std::unique_lock<std::shared_mutex> lock(idle_m);
   if (isIdle == _idle) return; // no changes
@@ -617,9 +577,7 @@ void Controller::idle(bool _idle) {
 }
 
 void Controller::rgbw() {
-  int r = 0;
-  int g = 0;
-  int b = 0;
+  int r, g = 0, b = 0;
 
   for (uint8_t idleLoopCount = 0; idleLoopCount < 10; idleLoopCount++) {
     for (r = 255; g < 255; g++) {
@@ -703,6 +661,7 @@ void Controller::disconnect(bool _reconnect) {
   available = false;
 
   if (_reconnect) initiateConnection();
+  else stopped = true;
 }
 
 double Controller::getAngle() {
@@ -717,8 +676,4 @@ void Controller::HIDEntry::resetTimer() { return time.reset(); }
 
 double Controller::HIDEntry::getTimeMS() {
   return value == HELD ? 0 : time.getTimeMS();
-}
-
-bool Controller::isActivated() const {
-  return m_isActivated;
 }

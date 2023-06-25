@@ -25,6 +25,10 @@ struct Utilities {
    * @return int16_t the integer read
    */
   static int16_t read16LE(unsigned char const *buf, int offset);
+
+  static void ltrim(std::string &s);
+  static void rtrim(std::string &s);
+  static void trim(std::string &s);
 };
 
 #endif //BUILDHAT_SRC_UTILS_UTILITIES_HPP_
