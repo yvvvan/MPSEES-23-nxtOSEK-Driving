@@ -50,6 +50,10 @@ void RobotController::execute() {
     return;
   }
 
+  /*if (!blackBoard.buildHatReady.get()) {
+    return;
+  }*/
+/*
   auto color = colorSensor.get_color();
   for (auto const &range : blackBoard.colors.get()) {
     if (range.contains(color)) {
@@ -58,7 +62,7 @@ void RobotController::execute() {
       std::cout << "----------------------------------------" << std::endl;
     }
   }
-
+*/
   // get the angle from the blackboard
   double angle = blackBoard.offset_middle_line.get();
 
@@ -75,6 +79,9 @@ void RobotController::execute() {
 
   // check whether the angle is too big, if so, set it to the maximum with regard to the sign
   if (std::abs(angle) > 175) angle = angle / std::abs(angle) * 175;
+
+  // set the speed of the car
+  drive.set_speed(.75); // TODO: make configurable
 
   // use the angle to control the car
   drive.move_forward(angle);

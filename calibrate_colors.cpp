@@ -38,7 +38,9 @@ bool test_calibration() {
 
 int main() {
   ColorSensor colorSensor;
+  std::cout << colorSensor.get_color() << std::endl;
+  /*
   colorSensor.calibrate();
-  test_calibration();
+  test_calibration();*/
   return 0;
 }

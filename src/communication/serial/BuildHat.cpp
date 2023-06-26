@@ -3,6 +3,7 @@
 /* own headers */
 #include "globals.hpp"
 #include "remote_control/utils/Utilities.hpp"
+#include "communication/internal/BlackBoard.hpp"
 
 /* library headers */
 #include <thread>
@@ -58,6 +59,8 @@ BuildHat::BuildHat() :
   serial_write_line("clear_faults", false);
 
   ready = true;
+
+  BlackBoard::getInstance().buildHatReady = true;
 }
 
 BuildHat::~BuildHat() {

@@ -32,6 +32,8 @@ class BlackBoard {
   // general thread control
   SmartMember<bool> running{true};                                  // set false to stop all threads
 
+  SmartMember<bool> buildHatReady{false};
+
   // Control
   SmartMember<bool> has_turned;                                     // flag indicating that the car has turned
 

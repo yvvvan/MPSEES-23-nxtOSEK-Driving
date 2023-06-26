@@ -15,6 +15,7 @@
 class ColorSensor {
  GEORDI_PUBLIC:
   explicit ColorSensor(uint8_t port = PORT_COLOR_SENSOR);
+  ~ColorSensor();
 
   static ColorSensor &getInstance();
 

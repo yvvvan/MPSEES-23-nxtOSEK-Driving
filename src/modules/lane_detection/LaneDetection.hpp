@@ -1,11 +1,10 @@
 #ifndef LANE_DETECTION_MAIN_HPP
 #define LANE_DETECTION_MAIN_HPP
 
-#include <array>
-#include <deque>
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <deque>
 
 #include <opencv2/opencv.hpp>
 
@@ -24,32 +23,33 @@ enum LaneDetectionMode {
  * @brief The lane detection class.
  */
 class LaneDetection {
- GEORDI_PUBLIC:
+public:
+  // the mode to run in
+  LaneDetectionMode mode;
+
   /**
-   * @brief Construct a new Lane Detection object.
-   *
-   * @param mode The mode to run in.
+     * @brief Construct a new Lane Detection object.
+     *
+     * @param mode The mode to run in.
    */
   explicit LaneDetection(LaneDetectionMode mode);
 
   /**
-   * @brief Destroy the Lane Detection object.
+     * @brief Destroy the Lane Detection object.
+     *
    */
-  ~LaneDetection();
+  ~LaneDetection() = default;
 
   /**
-   * @brief Runs the lane detection.
-   *
-   * @param path The path to the file (image or video).
+     * @brief Runs the lane detection.
+     *
+     * @param path The path to the file (image or video).
    */
   void run(const char *path);
 
- GEORDI_PRIVATE:
+private:
   // blackboard
   BlackBoard &blackboard{BlackBoard::getInstance()};
-
-  // the mode to run in
-  LaneDetectionMode mode;
 
   // frame
   cv::Mat frame;
@@ -59,8 +59,8 @@ class LaneDetection {
   cv::Vec4d leftLane;
   cv::Vec4d rightLane;
 
-  bool hasLeftLane{false};
-  bool hasRightLane{false};
+  bool hasLeftLane;
+  bool hasRightLane;
 
   // important lines
   std::vector<cv::Vec4d> horizontalLines;
@@ -77,60 +77,60 @@ class LaneDetection {
   std::deque<double> offset_queue;
 
   /**
-   * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
+     * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
    */
   void line_filtering();
 
   /**
-   * @brief Preprocesses the image frame.
+     * @brief Preprocesses the image frame.
    */
   void image_preprocessing();
 
   /**
-   * @brief Checks if intersection exists in the frame.
+     * @brief Checks if intersection exists in the frame.
    */
   void check_intersection();
 
   /**
-   * @brief Calculates the offset to the middle line.
+     * @brief Calculates the offset to the middle line.
    */
   void calculate_center();
 
   /**
-   * @brief Writes values to the blackboard.
+     * @brief Writes values to the blackboard.
    */
   void return_function();
 
   /**
-   * @brief Runs the lane detection on a single image.
+     * @brief Runs the lane detection on a single image.
    */
   void process_image_frame();
 
   /**
-   * @brief Runs the lane detection on the camera stream.
+     * @brief Runs the lane detection on the camera stream.
    */
   void main_loop_camera();
 
   /**
-   * @brief Runs the lane detection on a video.
-   *
-   * @param video_path the path to the video
+     * @brief Runs the lane detection on a video.
+     *
+     * @param video_path the path to the video
    */
   void main_loop_video(const std::string &video_path);
 
   /**
-   * @brief Sets up the blackboard members.
+     * @brief Sets up the blackboard members.
    */
   void setup_blackboard_smart_members();
 
   /**
-   * @brief Calculates the average of the last 4 offsets.
+     * @brief Calculates the average of the last 4 offsets.
    */
   double calculate_center_offset_average();
 
   std::array<bool, 3> find_majority_exits_intersection();
 
-  static bool find_majority_bool_deque(std::deque<bool> &boolDeque);
+  bool find_majority_bool_deque(std::deque<bool> &boolDeque);
 };
 
 #endif //LANE_DETECTION_MAIN_HPP

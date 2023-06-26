@@ -16,7 +16,14 @@ ColorSensor::ColorSensor(uint8_t port) {
   }
 
   this->port = port;
+
+  buildHat.serial_write_line("port " + std::to_string(this->port) + "; set -1");
+
   this->available = true;
+}
+
+ColorSensor::~ColorSensor() {
+  buildHat.serial_write_line("port " + std::to_string(this->port) + "; set 0");
 }
 
 void ColorSensor::calibrate() {
@@ -137,10 +144,18 @@ Color::Color ColorSensor::get_color() {
   // read data
   auto data = buildHat.serial_read_line();
 
+  // strip prefix
+  data = data.substr(6);
+
   // parse data
   std::istringstream iss(data);
   int hue, sat, val;
   iss >> hue >> sat >> val;
+
+  if (hue == sat == val == 0) {
+    std::cerr << "Got no color" << std::endl;
+    return {};
+  }
 
   // decode data
   sat = static_cast<int>((sat / 1024.0) * 100);
