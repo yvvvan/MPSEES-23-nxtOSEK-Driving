@@ -42,7 +42,16 @@ constexpr double RAD_2_DEG = 180.0 / M_PI;
 /* serial device */
 constexpr char SERIAL_DEVICE[] = "/dev/serial0";
 
+/* color sensor parameters */
+constexpr int PORT_COLOR_SENSOR = 2;
+
 /* drive parameters */
+constexpr int PORT_LEFT_MOTOR = 3;
+constexpr bool INVERT_LEFT_MOTOR = false;
+
+constexpr int PORT_RIGHT_MOTOR = 0;
+constexpr bool INVERT_RIGHT_MOTOR = true;
+
 constexpr double FORWARD_ANGLE = 120; // everything above this angle is considered in place turning
 constexpr double FORWARD_SCALE_FACTOR = (-1.0 / (FORWARD_ANGLE / 2.0));
 

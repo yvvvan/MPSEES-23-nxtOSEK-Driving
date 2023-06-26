@@ -48,11 +48,16 @@ target_link_libraries(${PROJECT_NAME}_test_lib pthread stdc++fs bluetooth ${LIBS
 
 # Add executable targets
 add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME}_calibrate_colors calibrate_colors.cpp)
 #add_executable(${PROJECT_NAME}_test test/main.cpp)
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+target_link_libraries(${PROJECT_NAME}_calibrate_colors ${PROJECT_NAME}_lib)
 #target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_test_lib)
+
+# Add custom "build all" target
+add_custom_target(build_all ALL DEPENDS ${PROJECT_NAME} ${PROJECT_NAME}_calibrate_colors)
 
 ## Add testing
 #enable_testing()

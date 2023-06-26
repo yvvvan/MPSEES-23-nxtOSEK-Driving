@@ -9,6 +9,7 @@ ColorSensor::ColorSensor(uint8_t port) {
   }
 
   this->port = port;
+  this->available = true;
 }
 
 ColorSensor::Color ColorSensor::get_color() {

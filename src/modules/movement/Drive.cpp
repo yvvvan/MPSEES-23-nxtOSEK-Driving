@@ -8,7 +8,9 @@ IMovement &Drive::getInstance() {
   return instance;
 }
 
-Drive::Drive() : left(Motor::getInstance(3)), right(Motor::getInstance(0, true)) {}
+Drive::Drive() :
+    left(Motor::getInstance(PORT_LEFT_MOTOR, INVERT_LEFT_MOTOR)),
+    right(Motor::getInstance(PORT_LEFT_MOTOR, INVERT_RIGHT_MOTOR)) {}
 
 void Drive::stop() {
   left.stop();
