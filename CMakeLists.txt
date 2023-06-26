@@ -24,12 +24,12 @@ file(GLOB_RECURSE LOCAL_LIBRARY_SOURCES "lib/*.cpp")
 file(GLOB_RECURSE LOCAL_LIBRARY_HEADERS "lib/*.hpp")
 
 # Locate the libserial and opencv libraries
-find_library(LIBSERIAL_LIBRARY NAMES serial)
 find_package(OpenCV)
+find_library(LIBSERIAL_LIBRARY NAMES serial)
 
 # Add the include directory for libserial
-include_directories(${LIBSERIAL_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${LIBSERIAL_INCLUDE_DIRS})
 
 # Add library targets
 add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_HEADERS})
@@ -57,7 +57,7 @@ target_link_libraries(${PROJECT_NAME}_calibrate_colors ${PROJECT_NAME}_lib)
 #target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_test_lib)
 
 # Add custom "build all" target
-add_custom_target(build_all ALL DEPENDS ${PROJECT_NAME} ${PROJECT_NAME}_calibrate_colors)
+add_custom_target(BUILD_ALL ALL DEPENDS ${PROJECT_NAME} ${PROJECT_NAME}_calibrate_colors)
 
 ## Add testing
 #enable_testing()

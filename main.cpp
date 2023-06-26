@@ -37,15 +37,25 @@ int test_turn_main() {
 }
 
 int main() {
+  auto &blackBoard{BlackBoard::getInstance()};
+  blackBoard.running = true;
+
   //return test_turn_main();
 
   // create a new thread and detach which handles lane detection
-  LaneDetection laneDetection(LaneDetectionMode::CAMERA);
-  std::thread([&laneDetection]() mutable { laneDetection.run(nullptr); }).detach();
+  std::thread([]() {
+    LaneDetection laneDetection(LaneDetectionMode::CAMERA);
+    laneDetection.run(nullptr);
+  }).detach();
 
   // TODO: ORB and webserver threads
 
-  std::thread(&RobotController::run).join();
+  std::thread([&blackBoard]() {
+    RobotController robotController;
+    while (blackBoard.running.get()) {
+      robotController.execute();
+    }
+  }).join();
 
   return 0;
 }

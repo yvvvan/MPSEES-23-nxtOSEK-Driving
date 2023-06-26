@@ -4,9 +4,11 @@
 #include "globals.hpp"
 
 #include "SmartMember.hpp"
+#include "modules/color_sensor/ColorTypes.hpp"
 
 #include <array>
 #include <mutex>
+#include <vector>
 
 /**
  * @brief common, synchronised data exchange
@@ -32,6 +34,9 @@ class BlackBoard {
 
   // Control
   SmartMember<bool> has_turned;                                     // flag indicating that the car has turned
+
+  // Color sensor
+  SmartMember<std::vector<Color::ColorRange> > colors;              // vector of colors
 
   // Lane detection
   SmartMember<bool> lane_detection_ready{false};                    // flag indicating that the lane detection is ready

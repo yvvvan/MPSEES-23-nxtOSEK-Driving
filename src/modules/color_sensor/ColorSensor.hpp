@@ -3,6 +3,8 @@
 
 #include "globals.hpp"
 
+#include "modules/color_sensor/ColorTypes.hpp"
+
 #include "communication/serial/BuildHat.hpp"
 #include "communication/serial/ISerialReadWrite.hpp"
 
@@ -14,44 +16,33 @@ class ColorSensor {
  GEORDI_PUBLIC:
   explicit ColorSensor(uint8_t port = PORT_COLOR_SENSOR);
 
-  struct Color {
-    int hue;
-    int sat;
-    int val;
+  static ColorSensor &getInstance();
 
-    friend std::ostream &operator<<(std::ostream &os, Color const &color) {
-      return os << "{hue: " << color.hue << ", sat: " << color.sat << ", val: " << color.val << "}";
-    }
-  };
+  /**
+   * @brief calibrate the color sensor
+   *
+   */
+  void calibrate();
 
-  struct ColorRange {
-    std::string name;
-    Color min;
-    Color max;
-
-    [[nodiscard]] bool contains(Color color) const {
-      return color.hue >= min.hue && color.hue <= max.hue &&
-          color.sat >= min.sat && color.sat <= max.sat &&
-          color.val >= min.val && color.val <= max.val;
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, ColorRange const &range) {
-      return os << "ColorRange " << range.name
-                << ": {min: " << range.min.hue << ", " << range.min.sat << ", " << range.min.val
-                << ", max: " << range.max.hue << ", " << range.max.sat << ", " << range.max.val << "}";
-    }
-  };
+  /**
+   * @brief parse the calibration file
+   *
+   * @return std::vector<ColorRange>
+   */
+  static std::vector<Color::ColorRange> parse_calibration_file();
 
   /**
    * @brief get the color of the object in front of the sensor
    *
    * @return Color
    */
-  Color get_color();
+  Color::Color get_color();
 
  GEORDI_PRIVATE:
   bool available = false;
   uint8_t port{};
+
+  static std::string get_calibration_file_path();
 
   ISerialReadWrite &buildHat = BuildHat::getInstance();
 };
