@@ -14,7 +14,7 @@ add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
 file(GLOB_RECURSE TEST_FILES *.cpp)
-add_executable(geordi_test ${TEST_FILES})
+add_executable(geordi_test ${TEST_FILES} helper.hpp)
 add_executable(mapping_test test_mapping.cpp)
 
 target_link_libraries(geordi_test

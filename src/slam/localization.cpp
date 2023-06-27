@@ -78,34 +78,50 @@ int Localization::exec_thread() {
   return 0;
 }
 
-Coordinates Localization::driving_tracking(std::time_t old_time) {
+void Localization::reset_clock() {
+  this->time = std::chrono::system_clock::now();
+}
+
+double calc_sin(double angle) {
+  return std::round(sin(angle * M_PI / 180) * 100) / 100;
+}
+
+double calc_cos(double angle) {
+  return std::round(cos(angle * M_PI / 180) * 100) / 100;
+}
+
+Coordinates Localization::driving_tracking() {
   auto curr_time = std::chrono::system_clock::now();
   long time_difference = std::chrono::duration_cast<std::chrono::milliseconds>(
                              curr_time - this->time)
                              .count();
+  this->time = curr_time;
   double speed = this->blackboard.speed.get();
   double angle = this->blackboard.angle.get();
   Coordinates coordinates = this->blackboard.coordinates.get();
 
   /* TODO find appropriate time difference */
-  if (time_difference < 10 || speed == 0) {
+  if (time_difference < 10 || (speed == 0 && angle == 0)) {
     return coordinates;
   }
 
   /* calculate new driving direction */
-  if (angle != 0) {
-    double x = this->driving_direction.at(0) * cos(angle * M_PI / 180) -
-               this->driving_direction.at(1) * sin(angle * M_PI / 180);
-    double y = this->driving_direction.at(0) * sin(angle * M_PI / 180) +
-               this->driving_direction.at(1) * cos(angle * M_PI / 180);
-    this->driving_direction.at(0) = x;
-    this->driving_direction.at(1) = y;
+  if (angle != 0 && this->angle != angle) {
+    this->angle = angle;
+    double x = this->driving_direction.at(0) * calc_cos(angle) -
+               this->driving_direction.at(1) * calc_sin(angle);
+    double y = this->driving_direction.at(0) * calc_sin(angle) +
+               this->driving_direction.at(1) * calc_cos(angle);
+    this->driving_direction.at(0) = std::round(x * 100) / 100;
+    this->driving_direction.at(1) = std::round(y * 100) / 100;
   }
 
   // TODO caclulate correct multiplier
   double mult = speed * (double)time_difference;
   coordinates.add_vector(this->driving_direction.at(0) * mult,
                          this->driving_direction.at(1) * mult, 0);
-
+  //  std::cout << angle << " " << this->driving_direction.at(0) << " "
+  //            << this->driving_direction.at(1) << std::endl;
+  this->blackboard.coordinates.set(coordinates);
   return coordinates;
 }
