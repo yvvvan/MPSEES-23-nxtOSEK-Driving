@@ -1,6 +1,8 @@
 #ifndef COORDINATES_HPP
 #define COORDINATES_HPP
 
+#include <string>
+
 typedef enum Direction {
   LEFT = 1,
   STRAIGHT = 2,
@@ -45,6 +47,11 @@ class Coordinates {
    * @brief add vector to coordinates
    */
   void add_vector(double x, double y, double z);
+
+  /**
+   * @brief return string representation of coordinates
+   */
+  std::string to_string();
 
   double x;
   double y;

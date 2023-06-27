@@ -34,9 +34,14 @@ class Localization {
   int exec_thread();
 
   /**
+   * @brief reset the clock, to start tracking
+   */
+  void reset_clock();
+
+  /**
    * @brief set the Coordinates according to the driving direction
    */
-  Coordinates driving_tracking(std::time_t old_time);
+  Coordinates driving_tracking();
 
  private:
   /* ORB SLAM config files */
@@ -48,6 +53,7 @@ class Localization {
 
   /* Current Driving Direction, starting with (1,0) */
   array<double, 2> driving_direction = {1, 0};
+  double angle = 0;
   std::chrono::system_clock::time_point time = std::chrono::system_clock::now();
 
   /* Blackboard */

@@ -19,3 +19,10 @@ void Coordinates::add_vector(double x, double y, double z) {
   this->y += y;
   this->z += z;
 }
+
+std::string Coordinates::to_string() {
+  std::string str = "(" + std::to_string(this->x) + ", " +
+                    std::to_string(this->y) + ", " + std::to_string(this->z) +
+                    ")";
+  return str;
+}
