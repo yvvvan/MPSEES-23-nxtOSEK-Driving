@@ -60,6 +60,10 @@ class BlackBoard {
   SmartMember<std::array<Coordinates,4>> stations;
   SmartMember<bool> mapping_finished;
 
+  SmartMember<std::map<std::tuple<double, double> , std::array<int, 4>>> connection_map;
+  SmartMember<std::map<std::tuple<double, double> , std::array<int, 4>>> duration_map;
+  SmartMember<int> next_instersection;
+
   /******* end of member variables *******/
 
  GEORDI_PRIVATE:

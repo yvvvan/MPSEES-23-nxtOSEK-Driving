@@ -83,10 +83,12 @@ int Mapping::exec_thread() {
 
     // a dictionary to index the intersections
     std::map<std::tuple<double, double> , int> index_intersection;
-    // a dictionary to the visit state of intersections' exits
+    // a dictionary of the visit state of intersections' exits 
     std::map<std::tuple<double, double> , std::array<int, 4>> map_intersection;
-    // a dictionary to the connection of intersections' exits
+    // a dictionary of the connection of intersections' exits
     std::map<std::tuple<double, double> , std::array<int, 4>> connection_intersection;
+    // a dictionary of the duration of intersections' exits to next intersection
+    std::map<std::tuple<double, double> , std::array<int, 4>> duration_intersection;
     
     std::tuple<double, double> intersection_current (0,0);
     std::tuple<double, double> intersection_last (0,0);
@@ -101,6 +103,8 @@ int Mapping::exec_thread() {
     // intersection detection
     bool intersection_detected = false;
     bool intersection_detected_last;
+    auto intersection_time = std::chrono::system_clock::now();
+    auto intersection_time_last = std::chrono::system_clock::now();
     bool exit_left_detected;
     bool exit_right_detected;
     bool exit_middle_detected;
@@ -128,8 +132,7 @@ int Mapping::exec_thread() {
     this->blackboard.station.set(station_t::STATION_UNKNOWN);
     this->blackboard.stations.set(std::array<Coordinates,4>{Coordinates{0,0,0},Coordinates{0,0,0},Coordinates{0,0,0},Coordinates{0,0,0}});
     
-    //std::cout << "Mapping started ..." << std::endl;
-
+    std::cout << "Mapping started ..." << std::endl;
     while (this->blackboard.mapping_enabled.get()) {
         // direction initial, return unknown if there is no intersection; otherwise return left/right/straight 
         if (direction != direction_t::UNKNOWN) {
@@ -197,8 +200,10 @@ int Mapping::exec_thread() {
 
             if (index_intersection.size() > 0){
                 intersection_last = intersection_current;
+                intersection_time_last = intersection_time;
             }
 
+            intersection_time = std::chrono::system_clock::now();
 
             /* check if the intersection is in map and update coordinates */
             bool is_recorded_intersection = false;
@@ -250,24 +255,41 @@ int Mapping::exec_thread() {
                 map_intersection.insert(std::pair<std::tuple<double, double>,std::array<int, 4>>(current_position,exits_visit_stat));
                 index_intersection.insert(std::pair<std::tuple<double, double>, int>(current_position, index_intersection.size()));
                 connection_intersection.insert(std::pair<std::tuple<double, double>, std::array<int, 4>>(current_position, exits_visit_stat));
+                duration_intersection.insert(std::pair<std::tuple<double, double>, std::array<int, 4>>(current_position, exits_visit_stat));
             }
 
             // update the map
             if (index_intersection.size() > 1){
                 std::array<int, 4> connection_current = connection_intersection.find(intersection_current)->second;
                 std::array<int, 4> connection_last = connection_intersection.find(intersection_last)->second;
+                std::array<int, 4> durations_current = duration_intersection.find(intersection_current)->second;
+                std::array<int, 4> durations_last = duration_intersection.find(intersection_last)->second;
                 int index_intersection_current = index_intersection.find(intersection_current)->second;
                 int index_intersection_last = index_intersection.find(intersection_last)->second;
+                auto intersection_duration = std::chrono::duration_cast<std::chrono::milliseconds>(intersection_time - intersection_time_last).count();
 
                 connection_current.at(exit_current) = index_intersection_last;
                 connection_last.at(exit_last) = index_intersection_current;
+                durations_current.at(exit_current) = intersection_duration;
+                durations_last.at(exit_last) = intersection_duration;
                 connection_intersection.find(intersection_current)->second = connection_current;
                 connection_intersection.find(intersection_last)->second = connection_last;
+                duration_intersection.find(intersection_current)->second = durations_current;
+                duration_intersection.find(intersection_last)->second = durations_last;
 
                 //std::cout << index_intersection_last << " " << exit_last << " → " << index_intersection_current << " " << exit_current << std::endl;
                 int weight = 1; //todo: change it to the time
-                map_matrix[index_intersection_current][index_intersection_last] = weight;
-                map_matrix[index_intersection_last][index_intersection_current] = weight;
+                if (map_matrix[index_intersection_current][index_intersection_last] > 0){
+                    int original_duration = map_matrix[index_intersection_current][index_intersection_last];
+                    int current_duration = intersection_duration;
+                    if (current_duration < original_duration) {
+                        map_matrix[index_intersection_current][index_intersection_last] = current_duration;
+                        map_matrix[index_intersection_last][index_intersection_current] = current_duration;
+                    }
+                } else {
+                    map_matrix[index_intersection_current][index_intersection_last] = intersection_duration;
+                    map_matrix[index_intersection_last][index_intersection_current] = intersection_duration;
+                }
             }
 
             this->blackboard.direction.set(direction);
@@ -296,6 +318,7 @@ int Mapping::exec_thread() {
         if (is_finished && !map_intersection.empty()){
             this->blackboard.mapping_finished.set(true);
             this->blackboard.direction_changed.set(false);
+            this->blackboard.connection_map.set(connection_intersection);
             std::cout << "Mapping finished." << std::endl;
             break;
         }
@@ -318,6 +341,17 @@ int Mapping::exec_thread() {
 
     std::cout << "intersection x,y | connected to S-W-N-E" << std::endl;
     for(const auto& elem : connection_intersection){
+        int id = index_intersection.find(elem.first)->second;
+        double intersection_x = std::get<0>(elem.first);
+        double intersection_y = std::get<1>(elem.first);
+        int south_exit =  std::get<0>(elem.second);
+        int left_exit =  std::get<1>(elem.second);
+        int north_exit =  std::get<2>(elem.second);
+        int right_exit =  std::get<3>(elem.second);
+        std::cout << id << " | " << intersection_x  << " \t" <<  intersection_y << " \t| " <<  south_exit << " \t" <<  left_exit << " \t" <<  north_exit << " \t" <<  right_exit << std::endl;
+    }
+    std::cout << "intersection x,y | Duration to next intersection S-W-N-E" << std::endl;
+    for(const auto& elem : duration_intersection){
         int id = index_intersection.find(elem.first)->second;
         double intersection_x = std::get<0>(elem.first);
         double intersection_y = std::get<1>(elem.first);
