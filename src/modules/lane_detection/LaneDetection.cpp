@@ -4,7 +4,7 @@
  * image_preprocessing
  *
  * Does the following preprocessing steps:
- *      - grayscaling
+ *      - gray-scaling
  *      - gaussian blurring
  *      - canny algorithm
  *      - masking
@@ -14,7 +14,7 @@
  * @return cv::Mat the preprocessed image
  */
 void LaneDetection::image_preprocessing() {
-  // grayscaling
+  // gray-scaling
   cv::cvtColor(this->frame, this->frame, cv::COLOR_BGR2GRAY);
 
   // blurring
@@ -24,14 +24,14 @@ void LaneDetection::image_preprocessing() {
   cv::Canny(this->frame, this->frame, CANNY_THRESHOLD_1, CANNY_THRESHOLD_2);
 
   // masking
-  /*cv::Mat masking_frame(frame.size(), CV_8UC1, cv::Scalar(0));
-  double mask_th = 0.6;
+  cv::Mat masking_frame(frame.size(), CV_8UC1, cv::Scalar(0));
+  double mask_th = 0.85;
   int mask_height = static_cast<int>(this->frame.rows * mask_th);
   cv::Rect roi(0, this->frame.rows - mask_height, this->frame.cols, mask_height);
   masking_frame(roi) = 255;
 
   // applying the Mask
-  cv::bitwise_and(this->frame, masking_frame, this->frame);*/
+  cv::bitwise_and(this->frame, masking_frame, this->frame);
 }
 
 /**
@@ -136,9 +136,23 @@ void LaneDetection::line_filtering() {
  */
 void LaneDetection::check_intersection() {
   // Calculate the x-coordinate of the center of the image
-  double th = IMAGE_MIDDLE / 5;
+  double th = IMAGE_MIDDLE / 10;
   std::array<bool, 3> temp_intersections = {false, false, false};
   bool temp_dead_end = false;
+  double max_left = th;
+  double max_right = th;
+
+  if(this->leftLane[0] > this->leftLane[2]){
+    max_left = this->leftLane[0] + max_left;
+  }else {
+    max_left = this->leftLane[2] + max_left;
+  }
+  if (this->rightLane[0] > this->rightLane[2]){
+    max_right = this->rightLane[0] - max_right;
+  }else {
+    max_right = this->rightLane[2] - max_right;
+  }
+
 
   // Loop through each horizontal line
   for (const auto &horizontalLine: this->horizontalLines) {
@@ -177,13 +191,13 @@ void LaneDetection::check_intersection() {
           // there is an intersection on the left but no right line -> not able to turn left or go ahead, just right is possible
           temp_intersections[0] = false;
           temp_intersections[2] = true;
-        } else if (hx > IMAGE_MIDDLE - th && hx < IMAGE_MIDDLE + th && this->leftLane != cv::Vec4d()
-                   && this->rightLane != cv::Vec4d()) {
+        } else if (hx > max_left && hx < max_right && this->leftLane != cv::Vec4d()
+            && this->rightLane != cv::Vec4d()) {
           // the line is in the center of the image and there is a left and a right line -> not able to turn right, left or go ahead
           temp_intersections[0] = false;
           this->is_dead_end.push_front(true);
           temp_dead_end = true;
-        } else if (horizontalLine[1] > this->leftLane[1] || horizontalLine[3] > this->leftLane[3]) {
+        } else if (horizontalLine[1] > this->leftLane[1] && horizontalLine[3] > this->leftLane[3]) {
           // the line is above the right lane, so it must be possible to go straight ahead
           temp_intersections[1] = true;
         }
@@ -218,14 +232,14 @@ void LaneDetection::check_intersection() {
           // there is an intersection on the right but no left line -> not able to turn right or go ahead, just left is possible
           temp_intersections[0] = true;
           temp_intersections[2] = false;
-        } else if (hx > IMAGE_MIDDLE - th && hx < IMAGE_MIDDLE + th && this->leftLane != cv::Vec4d()
+        } else if (hx > max_left && hx < max_right && this->leftLane != cv::Vec4d()
                    && this->rightLane != cv::Vec4d()) {
           // the line is in the center of the image and there is a left and a right line -> not able to turn right, left or go ahead
           temp_intersections[0] = false; // not able to turn left, even if it was detected earlier
           temp_intersections[2] = false;
           this->is_dead_end.push_front(true);
           temp_dead_end = true;
-        } else if (horizontalLine[1] > this->rightLane[1] || horizontalLine[3] > this->rightLane[3]) {
+        } else if (horizontalLine[1] > this->rightLane[1] && horizontalLine[3] > this->rightLane[3]) {
           // the line is above the right lane, so it must be possible to go straight ahead
           temp_intersections[1] = true;
         }
@@ -238,8 +252,12 @@ void LaneDetection::check_intersection() {
     this->is_dead_end.push_front(false);
   }
 
+  if (this->is_dead_end.size() == INTERSECTION_QUEUE_SIZE) {
+    this->is_dead_end.pop_back();
+  }
+
   // push to queue, pop if queue is full
-  if (this->exits_intersection.size() == QUEUE_SIZE) {
+  if (this->exits_intersection.size() == INTERSECTION_QUEUE_SIZE) {
     this->exits_intersection.pop_back();
   }
 
@@ -276,7 +294,7 @@ void LaneDetection::calculate_center() {
     this->offset_queue.pop_back();
   }
 
-  //Case 1: Both lines detected or we are in an intersection
+  //Case 1: Both lines detected, or we are in an intersection
   if ((this->leftLane != cv::Vec4d() && this->rightLane != cv::Vec4d())) {
 
     // Extract start points of the left and right lines
@@ -292,7 +310,7 @@ void LaneDetection::calculate_center() {
     double mid_end_y = (left_end.y + right_end.y) * 0.5;
 
     //create center between both lines
-    cv::Vec4f center(mid_start_x, mid_start_y, mid_end_x, mid_end_y);
+    cv::Vec4d center(mid_start_x, mid_start_y, mid_end_x, mid_end_y);
     this->centerLine.push_back(center);
 
     //double mid_x = (mid_start_x + mid_end_x) * 0.5 - IMAGE_MIDDLE;
@@ -325,7 +343,7 @@ void LaneDetection::calculate_center() {
 
   } else {
     //PLACEHOLDER FOR CASE 4
-    std::cout << "Both lines missing." << std::endl;
+    //std::cout << "Both lines missing." << std::endl;
   }
 }
 
@@ -357,7 +375,7 @@ std::array<bool, 3> LaneDetection::find_majority_exits_intersection() {
 
   // Find the array with the highest count
   int maxCount = 0;
-  std::array<bool, 3> majorityArray;
+  std::array<bool, 3> majorityArray{};
   for (const auto& pair : frequencyMap) {
     if (pair.second > maxCount) {
       maxCount = pair.second;
@@ -423,6 +441,8 @@ void LaneDetection::return_function() {
   }
 
   this->blackboard.lane_count = lane_count;
+  this->blackboard.has_left_lane = this->hasLeftLane;
+  this->blackboard.has_right_lane = this->hasRightLane;
   this->blackboard.offset_middle_line.set(angle);
 
   this->blackboard.is_intersection.set(find_majority_bool_deque(this->is_intersection));
@@ -452,10 +472,13 @@ void LaneDetection::process_image_frame() {
 
   // if we get a "turning" signal from the blackboard, purge all queues
   if (this->blackboard.has_turned.get()) {
-    this->offset_queue = std::deque<double>();
-    this->is_intersection = std::deque<bool>();
-    this->exits_intersection = std::deque<std::array<bool, 3>>();
-    this->is_dead_end = std::deque<bool>();
+    this->offset_queue.clear();
+    this->is_intersection.clear();
+    this->exits_intersection.clear();
+    this->is_dead_end.clear();
+    this->blackboard.has_turned = false;
+    // wait at least one frame
+    this->blackboard.lane_detection_ready = false;
   }
 
   /***** End of Clearing *****/
@@ -480,12 +503,12 @@ void LaneDetection::process_image_frame() {
   /* UNCOMMENT FOR VISUALIZATION
      * Draw lane lines on the result image*/
 
-  cv::Vec4d actual_center(this->original_frame.cols / 2, 0, this->original_frame.cols / 2, this->original_frame.rows);
+  cv::Vec4d actual_center(this->original_frame.cols / 2.0, 0, this->original_frame.cols / 2.0, this->original_frame.rows);
   drawLaneLines(this->original_frame, this->centerLine, cv::Scalar(0, 0, 255));
   drawLaneLine(this->original_frame, actual_center, cv::Scalar(255, 0, 0));
-  drawLaneLine(this->original_frame, leftLane, cv::Scalar(0, 255, 255)); //gelb
-  drawLaneLine(this->original_frame, rightLane, cv::Scalar(255, 255, 0)); //türkis
-  drawLaneLines(this->original_frame, this->horizontalLines, cv::Scalar(0, 0, 0)); //schwarz
+  drawLaneLine(this->original_frame, leftLane, cv::Scalar(0, 255, 255)); // yellow
+  drawLaneLine(this->original_frame, rightLane, cv::Scalar(255, 255, 0)); // cyan
+  drawLaneLines(this->original_frame, this->horizontalLines, cv::Scalar(0, 0, 0)); // black
   /*
   cv::imshow("Result with Centerline and actual center of the image", result);
   cv::imshow("Processed Frame", this->frame);
@@ -507,7 +530,7 @@ void LaneDetection::main_loop_camera() {
   cv::VideoCapture capture;
 
   // open and close again, because for some reason the first
-  // time after boot looks extremely different then any time else
+  // time after boot looks extremely different from any time else
 
   capture.open(0);
   capture.release();
@@ -531,18 +554,18 @@ void LaneDetection::main_loop_camera() {
   capture >> image;
   int width = image.cols;   // Get the width of the image
   int height = image.rows;  // Get the height of the image
-                           /*
-                             cv::VideoWriter writer;
-                             std::string outputFilename = "output.mp4";
-                             int codec = cv::VideoWriter::fourcc('a','v', 'c', '1');  // Codec for MP4
-                             double fps = 20.0;  // Frames per second
-                             cv::Size frameSize(width, height);  // Frame size
 
-                             writer.open(outputFilename, codec, fps, frameSize);
-                             if (!writer.isOpened()) {
-                               std::cout << "Could not open the output video file for writing." << std::endl;
-                             }
-                           */
+   cv::VideoWriter writer;
+   std::string outputFilename = "/home/pi/code_output.mp4";
+   int codec = cv::VideoWriter::fourcc('a','v', 'c', '1');  // Codec for MP4
+   double fps = 20.0;  // Frames per second
+   cv::Size frameSize(width, height);  // Frame size
+
+   writer.open(outputFilename, codec, fps, frameSize);
+   if (!writer.isOpened()) {
+     std::cout << "Could not open the output video file for writing." << std::endl;
+   }
+
   // creating an opencv window to display the processed frames
   /*cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
    */
@@ -557,6 +580,12 @@ void LaneDetection::main_loop_camera() {
     // read frame and store it in the lane detection object
     capture >> this->frame;
 
+    writer.write(this->frame);
+
+    if (!this->blackboard.buildHatReady.get()) {
+      return;
+    }
+
     //std::cout << "wrote frame" << std::endl;
 
     // ONLY FOR DEBUGGING - COPY FRAME TO ORIGINAL_FRAME
@@ -569,8 +598,6 @@ void LaneDetection::main_loop_camera() {
 
     // process image frame and display it
     process_image_frame();
-
-    //writer.write(this->original_frame);
 
     // update fps counter
     fps_counter++;
@@ -588,8 +615,8 @@ void LaneDetection::main_loop_camera() {
     }*/
   }
 
-  //std::cout << "releasing writer" << std::endl;
-  //writer.release();
+  std::cout << "releasing writer" << std::endl;
+  writer.release();
 
   std::cout << "releasing cap" << std::endl;
   capture.release();
@@ -697,12 +724,12 @@ double LaneDetection::calculate_center_offset_average() {
 
   for (const auto& offset : this->offset_queue) {
     slope_sum += offset;
-    std::cout << "Slope: " << offset << std::endl;
+    //std::cout << "Slope: " << offset << std::endl;
   }
 
   double avg = slope_sum / QUEUE_SIZE;
   double angle = (std::atan(avg) * 180 / M_PI);
-  std::cout << angle << std::endl;
+  //std::cout << angle << std::endl;
   if (angle < 0) {
     angle = 90 + angle;
   } else if (angle > 0) {

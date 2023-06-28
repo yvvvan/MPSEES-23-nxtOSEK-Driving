@@ -36,27 +36,41 @@ void Drive::move_forward(double angle) {
     return;
   }
 
+  double effective_speed = (1-this->speed) / (FORWARD_ANGLE/2.0) * std::abs(angle) + this->speed;
+
+  if (effective_speed > .9) {
+    effective_speed = .9;
+  }
+
   double adapted_speed;
   if (std::abs(angle) < FORWARD_ANGLE) {
     // if the angle is considered "forward", use regular calculation for turning
-    adapted_speed = (FORWARD_SCALE_FACTOR * std::abs(angle) + 1) * this->speed;
+    adapted_speed = (FORWARD_SCALE_FACTOR * std::abs(angle) + 1) * effective_speed;
   } else {
     // otherwise, turn in place
-    adapted_speed = -this->speed;
+    adapted_speed = -effective_speed;
   }
 
   if (angle < 0) {
     // turn left
     left.set_speed(adapted_speed);
-    right.set_speed(this->speed);
+    right.set_speed(effective_speed);
   } else {
     // turn right
-    left.set_speed(this->speed);
+    left.set_speed(effective_speed);
     right.set_speed(adapted_speed);
   }
 }
 
+void Drive::move_backward() {
+  left.set_speed(-this->speed);
+  right.set_speed(-this->speed);
+}
+
 void Drive::turn(bool _left) {
+  // save previous speed
+  double prev_speed = this->speed;
+
   double angle = (_left ? -180 : 180);
 
   static const int wind_up_time_ms = 1000;
@@ -64,7 +78,7 @@ void Drive::turn(bool _left) {
   static const double start_speed = 0.2;
   static const double target_speed = 0.9;
 
-  static const int turn_time_ms = 2500;
+  static const int turn_time_ms = 1433;
 
   // set both motors to coast
   coast();
@@ -81,12 +95,16 @@ void Drive::turn(bool _left) {
   auto lap = std::chrono::system_clock::now();
 
   while (std::chrono::duration_cast<std::chrono::milliseconds>(lap - start).count() < turn_time_ms) {
+    lap = std::chrono::system_clock::now();
     // drive forward
     move_forward(angle);
     std::this_thread::sleep_for(std::chrono::milliseconds{static_cast<int>(step_size_ms / 2.0)});
   }
 
   blackboard.has_turned = true;
+
+  // restore speed
+  this->speed = prev_speed;
 }
 
 void Drive::turn_left() {

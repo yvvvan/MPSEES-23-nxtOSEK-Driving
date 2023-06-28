@@ -15,6 +15,11 @@ class IMovement {
   virtual void move_forward(double angle) = 0;
 
   /**
+   * @brief Moves the robot backward
+   */
+  virtual void move_backward() = 0;
+
+  /**
    * @brief set the drive speed, -1.0 to 1.0
    *
    * @param speed

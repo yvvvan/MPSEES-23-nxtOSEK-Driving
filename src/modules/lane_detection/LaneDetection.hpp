@@ -59,8 +59,8 @@ private:
   cv::Vec4d leftLane;
   cv::Vec4d rightLane;
 
-  bool hasLeftLane;
-  bool hasRightLane;
+  bool hasLeftLane{};
+  bool hasRightLane{};
 
   // important lines
   std::vector<cv::Vec4d> horizontalLines;
@@ -130,7 +130,7 @@ private:
 
   std::array<bool, 3> find_majority_exits_intersection();
 
-  bool find_majority_bool_deque(std::deque<bool> &boolDeque);
+  static bool find_majority_bool_deque(std::deque<bool> &boolDeque);
 };
 
 #endif //LANE_DETECTION_MAIN_HPP

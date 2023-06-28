@@ -32,6 +32,13 @@ class RobotController {
   // store one angle in the past to ensure that the car does not turn too fast
   double last_angle = 0;
 
+  int wtf_counter = 0;
+
+  bool should_turn_left = false;
+  std::chrono::time_point<std::chrono::system_clock> leftTurnTime;
+  bool should_turn_right = false;
+  std::chrono::time_point<std::chrono::system_clock> rightTurnTime;
+
   IMovement &drive = Drive::getInstance();
   BlackBoard &blackBoard = BlackBoard::getInstance();
   //ColorSensor &colorSensor = ColorSensor::getInstance();

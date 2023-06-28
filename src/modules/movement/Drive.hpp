@@ -63,6 +63,11 @@ class Drive : public IMovement {
   void move_forward(double angle) override;
 
   /**
+   * @brief drive the robot backward
+   */
+  void move_backward() override;
+
+  /**
    * @brief turn left
    */
   void turn_left() override;

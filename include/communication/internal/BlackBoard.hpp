@@ -44,6 +44,8 @@ class BlackBoard {
   SmartMember<bool> lane_detection_ready{false};                    // flag indicating that the lane detection is ready
 
   SmartMember<int> lane_count;                                      // count the lanes
+  SmartMember<bool> has_left_lane;                                  // check if left lane exists
+  SmartMember<bool> has_right_lane;                                 // check if right lane exists
   SmartMember<bool> is_dead_end;                                    // check if dead end exists
   SmartMember<bool> is_intersection;                                // check if intersection exists
   SmartMember<double> offset_middle_line;                           // current offset to middle line

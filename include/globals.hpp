@@ -55,15 +55,20 @@ constexpr bool INVERT_RIGHT_MOTOR = true;
 constexpr double FORWARD_ANGLE = 120; // everything above this angle is considered in place turning
 constexpr double FORWARD_SCALE_FACTOR = (-1.0 / (FORWARD_ANGLE / 2.0));
 
+/* PD controller parameters */
+constexpr double KP = 0.25;
+constexpr double KD = 0.25;
+
 /* camera parameters */
-constexpr int FPS          = 20;
+constexpr int FPS          = 30;
 constexpr int IMAGE_WIDTH  = 640;
 constexpr int IMAGE_HEIGHT = 480;
 
 
 /* lane detection */
-constexpr int QUEUE_SIZE      = FPS / 5;
-constexpr double IMAGE_MIDDLE = IMAGE_WIDTH / 2.0;
+constexpr int QUEUE_SIZE              = FPS / 5;
+constexpr int INTERSECTION_QUEUE_SIZE = FPS / 2;
+constexpr double IMAGE_MIDDLE         = IMAGE_WIDTH / 2.0;
 
 // canny
 constexpr int CANNY_THRESHOLD_1 = 50;

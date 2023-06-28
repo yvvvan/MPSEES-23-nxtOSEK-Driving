@@ -1,5 +1,6 @@
 #include "RobotController.hpp"
 
+#include "modules/control/PDController.hpp"
 #include "modules/color_sensor/ColorSensor.hpp"
 
 #include <thread>
@@ -17,7 +18,7 @@ void RobotController::init() {
   last_angle = 0;
 
   // set the speed of the car
-  drive.set_speed(.75); // TODO: make configurable
+  drive.set_speed(2.0/3.0); // TODO: make configurable
 
   // initiate color sensor
   // TODO: actually use the calibration and the color sensor
@@ -39,20 +40,82 @@ void RobotController::terminate() {
 }
 
 void RobotController::execute() {
+  // create a new PD controller
+  // TODO: move back to globals.hpp
+  static PDController pd_controller(KP, KD);
+
   // take lap time
   lap = std::chrono::system_clock::now();
 
   // TODO: remove for actual code
   // check whether ten seconds have elapsed
-  if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 10) {
+  if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 50) {
     // initiate termination of the program
     blackBoard.running = false;
     return;
   }
 
-  /*if (!blackBoard.buildHatReady.get()) {
+  if (!blackBoard.buildHatReady.get()) {
+    return;
+  }
+
+  /*+++++++++++++++++++++++++++++++++++++++*/
+
+  /* TODO
+  if (blackBoard.is_dead_end.get()) {
+    drive.turn_left();
+    drive.turn_left();
     return;
   }*/
+/*
+  static int wait_time_ms = 750;
+
+  auto [leftIntersection, middleIntersection, rightIntersection] = blackBoard.exits_intersection.get();
+
+  if (leftIntersection||middleIntersection||rightIntersection) {
+    drive.set_speed(0.5);
+  } else {
+    drive.set_speed(2.0/3.0);
+  }
+
+  if (leftIntersection) {
+    if (!middleIntersection && !rightIntersection) {
+      if (!should_turn_left) {
+        should_turn_left = true;
+        leftTurnTime = std::chrono::system_clock::now();
+      }
+
+      // when the car is in the intersection for more than wait_time_ms milliseconds, turn left
+      auto now = std::chrono::system_clock::now();
+      if (std::chrono::duration_cast<std::chrono::milliseconds>(now - leftTurnTime).count() > wait_time_ms) {
+        should_turn_left = false;
+        drive.turn_left();
+        return;
+      }
+    } else {
+      should_turn_left = false;
+    }
+  }
+
+  if (rightIntersection) {
+    if (!middleIntersection && !leftIntersection) {
+      if (!should_turn_right) {
+        should_turn_right = true;
+        rightTurnTime = std::chrono::system_clock::now();
+      }
+
+      // when the car is in the intersection for more than wait_time_ms milliseconds, turn right
+      auto now = std::chrono::system_clock::now();
+      if (std::chrono::duration_cast<std::chrono::milliseconds>(now - rightTurnTime).count() > wait_time_ms) {
+        should_turn_right = false;
+        drive.turn_right();
+        return;
+      }
+    } else {
+      should_turn_right = false;
+    }
+  }
+*/
 /*
   auto color = colorSensor.get_color();
   for (auto const &range : blackBoard.colors.get()) {
@@ -63,26 +126,23 @@ void RobotController::execute() {
     }
   }
 */
+
   // get the angle from the blackboard
   double angle = blackBoard.offset_middle_line.get();
 
-  // calculate the distance between the last angle and the current angle
-  double diff = std::abs(angle - last_angle);
+  // calculate the angle using the PD controller
+  double error = angle;
+  double control_signal = pd_controller.calculateControl(error);
 
-  // difference is too big, use middle of both angles
-  if (diff > 60) {
-    angle = (angle + last_angle) / 2;
-  } else {
-    // difference is small, use current angle
-    last_angle = angle;
-  }
+  // adjust the angle
+  angle += control_signal;
 
   // check whether the angle is too big, if so, set it to the maximum with regard to the sign
   if (std::abs(angle) > 175) angle = angle / std::abs(angle) * 175;
 
-  // set the speed of the car
-  drive.set_speed(.75); // TODO: make configurable
-
   // use the angle to control the car
   drive.move_forward(angle);
+
+  // update last angle
+  last_angle = angle;
 }
