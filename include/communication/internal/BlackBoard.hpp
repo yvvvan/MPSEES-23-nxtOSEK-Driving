@@ -54,15 +54,19 @@ class BlackBoard {
   /* Localization & Mapping */
   SmartMember<bool> localization_enabled;
   SmartMember<bool> mapping_enabled;
-  SmartMember<Coordinates> coordinates;
-  SmartMember<direction_t> direction;
-  SmartMember<bool> direction_changed;
-  SmartMember<std::array<Coordinates,4>> stations;
   SmartMember<bool> mapping_finished;
+  SmartMember<bool> direction_changed; // if the direction needs to be read by motor
+  SmartMember<direction_t> direction; // the turning direction at an intersection
 
-  SmartMember<std::map<std::tuple<double, double> , std::array<int, 4>>> connection_map;
-  SmartMember<std::map<std::tuple<double, double> , std::array<int, 4>>> duration_map;
-  SmartMember<int> next_instersection;
+  SmartMember<Coordinates> coordinates; // current coordinates returned by localization
+  SmartMember<std::array<Coordinates,4>> stations; // coordinates of the 4 stations
+  SmartMember<std::map<int , std::array<int, 4>>> connection_map;
+  SmartMember<std::map<int , std::array<int, 4>>> duration_map;  
+
+  SmartMember<int> next_instersection; // if mapping is finished, localization will update this value (and coordinates) based on the map
+
+  /* Path Finding*/
+  SmartMember<bool> pathfinding_enabled;
 
   /******* end of member variables *******/
 
