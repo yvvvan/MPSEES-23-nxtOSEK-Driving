@@ -49,7 +49,7 @@ void RobotController::execute() {
 
   // TODO: remove for actual code
   // check whether ten seconds have elapsed
-  if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 50) {
+  if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 15) {
     // initiate termination of the program
     blackBoard.running = false;
     return;
