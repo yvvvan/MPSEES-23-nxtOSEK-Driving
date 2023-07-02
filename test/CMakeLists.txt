@@ -15,7 +15,7 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
 file(GLOB_RECURSE TEST_FILES *.cpp)
 add_executable(geordi_test ${TEST_FILES} helper.hpp)
-add_executable(mapping_test test_mapping.cpp)
+add_executable(mapping_test test_mapping.cpp helper.cpp)
 
 target_link_libraries(geordi_test
         PRIVATE

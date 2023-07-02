@@ -54,7 +54,7 @@ TEST(MappingTest, MappingThreadTest) {
   m_blackboard.mapping_enabled.set(true);
 
   /* start fake ORB-SLAM thread */
-  std::string trajectory_file_name = "../test/testTrajectory.txt";
+  std::string trajectory_file_name = "../test/testfiles/testTrajectory.txt";
   std::thread fake_orb_slam_thread(runFakeORBSLAM, trajectory_file_name);
 
   /* start mapping thread */
