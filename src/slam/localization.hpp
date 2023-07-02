@@ -7,9 +7,14 @@
 
 #include "blackboard/BlackBoard.hpp"
 
+#define USE_ORB_SLAM 1
+
+#define INTERSECTION_SEC_RANGE 2
+
 class Localization {
  public:
   // TODO should this be a singleton?
+#ifdef USE_ORB_SLAM
   /**
    * @brief Construct a new Localization object
    *
@@ -20,6 +25,8 @@ class Localization {
    * @return Localization&
    */
   Localization(std::string vocabularyFile, std::string configFile);
+#endif
+  Localization();
 
   /**
    * @brief Destroy the Localization object
@@ -41,20 +48,34 @@ class Localization {
   /**
    * @brief set the Coordinates according to the driving direction
    */
-  Coordinates driving_tracking();
+  Coordinates driving_tracking(long time_difference);
+
+  /* Function to change the driving direction */
+  void adjust_driving_direction(double angle);
+
+  /**
+   * @brief Handle angle at intersections
+   */
+  void handle_intersection(double angle, long time_difference);
+
+  /* Current Driving Direction, starting with (1,0) */
+  array<double, 2> driving_direction{};
 
  private:
+#ifdef USE_ORB_SLAM
   /* ORB SLAM config files */
   std::string vocabularyFile;
   std::string configFile;
 
   /* ORB SLAM system */
   ORB_SLAM3::System *slam;
+#endif
 
-  /* Current Driving Direction, starting with (1,0) */
-  array<double, 2> driving_direction = {1, 0};
-  double angle = 0;
-  std::chrono::system_clock::time_point time = std::chrono::system_clock::now();
+  double accum_angle;
+  long accum_time;
+  bool intersection = false;
+  bool intersection_driven = false;
+  std::chrono::system_clock::time_point time;
 
   /* Blackboard */
   BlackBoard &blackboard = BlackBoard::getInstance();
