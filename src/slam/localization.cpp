@@ -14,16 +14,23 @@
 
 #define MAXNOTRECEIVEDFRAMES 100
 
+#ifdef USE_ORB_SLAM
 Localization::Localization(std::string vocabularyFile, std::string configFile) {
   this->vocabularyFile = vocabularyFile;
   this->configFile = configFile;
 
   /* create slam instance */
   this->slam = new ORB_SLAM3::System(vocabularyFile, configFile,
-                                     ORB_SLAM3::System::MONOCULAR, true);
+                                     ORB_SLAM3::System::MONOCULAR, false);
+}
+#endif
+Localization::Localization() {
+  this->driving_direction = {1, 0};
+  this->accum_angle = 0;
 }
 
 Localization::~Localization() {
+#ifdef USE_ORB_SLAM
   /* Stop ORB SLAM */
   if (slam->GetTrackingState() !=
       ORB_SLAM3::Tracking::eTrackingState::SYSTEM_NOT_READY) {
@@ -34,8 +41,10 @@ Localization::~Localization() {
   if (this->slam != nullptr) {
     delete this->slam;
   }
+#endif
 }
 
+#ifdef USE_ORB_SLAM
 int Localization::exec_thread() {
   int notReceivedFrames = 0;
 
@@ -77,9 +86,39 @@ int Localization::exec_thread() {
 
   return 0;
 }
+#endif
 
 void Localization::reset_clock() {
   this->time = std::chrono::system_clock::now();
+}
+
+void Localization::handle_intersection(double angle, long time_difference) {
+  if (!blackboard.intersection_detected.get()) {
+    accum_time += time_difference;
+  }
+
+  if (accum_time > INTERSECTION_SEC_RANGE * 1000){
+    accum_time = 0;
+    intersection = false;
+    intersection_driven = false;
+    return;
+  }
+
+  if (intersection_driven) {
+    return;
+  }
+
+  accum_angle += angle;
+  if (accum_angle >= 80) {
+    accum_angle = 0;
+    this->adjust_driving_direction(90);
+    intersection_driven = true;
+
+  } else if (accum_angle <= -80) {
+    accum_angle = 0;
+    this->adjust_driving_direction(-90);
+    intersection_driven = true;
+  }
 }
 
 double calc_sin(double angle) {
@@ -90,12 +129,13 @@ double calc_cos(double angle) {
   return std::round(cos(angle * M_PI / 180) * 100) / 100;
 }
 
-Coordinates Localization::driving_tracking() {
-  auto curr_time = std::chrono::system_clock::now();
-  long time_difference = std::chrono::duration_cast<std::chrono::milliseconds>(
-                             curr_time - this->time)
-                             .count();
-  this->time = curr_time;
+Coordinates Localization::driving_tracking(long time_difference) {
+  //  auto curr_time = std::chrono::system_clock::now();
+  //  long time_difference =
+  //  std::chrono::duration_cast<std::chrono::milliseconds>(
+  //                             curr_time - this->time)
+  //                             .count();
+  //  this->time = curr_time;
   double speed = this->blackboard.speed.get();
   double angle = this->blackboard.angle.get();
   Coordinates coordinates = this->blackboard.coordinates.get();
@@ -106,22 +146,34 @@ Coordinates Localization::driving_tracking() {
   }
 
   /* calculate new driving direction */
-  if (angle != 0 && this->angle != angle) {
-    this->angle = angle;
-    double x = this->driving_direction.at(0) * calc_cos(angle) -
-               this->driving_direction.at(1) * calc_sin(angle);
-    double y = this->driving_direction.at(0) * calc_sin(angle) +
-               this->driving_direction.at(1) * calc_cos(angle);
-    this->driving_direction.at(0) = std::round(x * 100) / 100;
-    this->driving_direction.at(1) = std::round(y * 100) / 100;
+//  if (angle >= 90 || angle <= -90) {
+//    angle = 90;
+//  }
+  angle = angle * (double)time_difference / 1000 * speed * -1.3;
+  if (this->blackboard.intersection_detected.get() || this->intersection) {
+      this->intersection = true;
+      this->handle_intersection(angle, time_difference);
+  } else {
+    this->adjust_driving_direction(angle);
   }
 
   // TODO caclulate correct multiplier
-  double mult = speed * (double)time_difference;
+  double mult = speed * (double)time_difference / 1000;
   coordinates.add_vector(this->driving_direction.at(0) * mult,
                          this->driving_direction.at(1) * mult, 0);
-  //  std::cout << angle << " " << this->driving_direction.at(0) << " "
-  //            << this->driving_direction.at(1) << std::endl;
+  std::cout << "Angle: " << angle << "; "
+            << "X Forward: " << this->driving_direction.at(0) * mult << "; "
+            << "Y Forward: " << this->driving_direction.at(1) * mult << "; "
+            << mult << " " << time_difference << std::endl;
   this->blackboard.coordinates.set(coordinates);
   return coordinates;
+}
+
+void Localization::adjust_driving_direction(double new_angle) {
+  double x = this->driving_direction.at(0) * calc_cos(new_angle) -
+             this->driving_direction.at(1) * calc_sin(new_angle);
+  double y = this->driving_direction.at(0) * calc_sin(new_angle) +
+             this->driving_direction.at(1) * calc_cos(new_angle);
+  this->driving_direction.at(0) = std::round(x * 100) / 100;
+  this->driving_direction.at(1) = std::round(y * 100) / 100;
 }
