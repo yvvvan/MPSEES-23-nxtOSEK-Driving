@@ -9,7 +9,7 @@
 
 #define USE_ORB_SLAM 1
 
-#define INTERSECTION_SEC_RANGE 2
+#define INTERSECTION_SEC_RANGE 1
 
 class Localization {
  public:

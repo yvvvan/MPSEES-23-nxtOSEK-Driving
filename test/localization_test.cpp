@@ -144,9 +144,12 @@ TEST(LocalizationTest, TestORBSLAM) {
  */
 TEST(LocalizationTest, TestDrivingTracking) {
   const std::string testFile =
-      directory + "/testfiles/example_logs/simple_loop.txt";
+      directory + "/testfiles/example_logs/driving1_log.txt";
   const std::string logFile = directory + "/testfiles/example_logs/coords.txt";
+  const std::string logAngleFile =
+      directory + "/testfiles/example_logs/angles.txt";
   std::ofstream logFileStream(logFile);
+  std::ofstream logAngleFileStream(logAngleFile);
 
   /* open test file */
   auto test_file = std::ifstream(testFile);
@@ -189,6 +192,9 @@ TEST(LocalizationTest, TestDrivingTracking) {
               << coords.to_string() << std::endl;
     logFileStream << setprecision(4) << coords.x << " " << coords.y
                   << std::endl;
+    logAngleFileStream << setprecision(4) << l_blackboard.angle.get() << " "
+                       << l_blackboard.speed.get() << " " << time << " "
+                       << l_blackboard.intersection_detected.get() << std::endl;
   }
 
   cout << "Finished reading test file" << endl;
@@ -200,7 +206,7 @@ TEST(LocalizationTest, TestDrivingTracking) {
 
 TEST(LocalizationTest, phaseCorrelation) {
   // Open the video file
-  std::string videoFile = directory + "/testfiles/simple_loop.avi";
+  std::string videoFile = directory + "/testfiles/driving1_video.avi";
   cv::VideoCapture cap(videoFile);
   if (!cap.isOpened()) {
     std::cout << "Failed to open the video file." << std::endl;
@@ -213,31 +219,35 @@ TEST(LocalizationTest, phaseCorrelation) {
   // Read the first frame
   cap >> prevFrame;
   cvtColor(prevFrame, prevEdges, cv::COLOR_BGR2GRAY);
-//  Canny(prevEdges, prevEdges, 100, 150);  // Apply Canny edge detection
+  //  Canny(prevEdges, prevEdges, 100, 150);  // Apply Canny edge detection
   prevEdges.convertTo(prevEdges, CV_32FC1);
 
   // Create coordinate result file
   std::ofstream logFileStream(directory + "/testfiles/example_logs/coords.txt");
+  std::ofstream logShiftFile(directory + "/testfiles/example_logs/shift.txt");
   Coordinates coords;
 
   bool pause = false;
+  long time_counter = 0;
   // Loop through the video frames
   while (true) {
+    time_counter++;
     // Read the current frame
     cap >> frame;
     if (frame.empty()) break;
 
     // Convert frame to edges
     cvtColor(frame, edges, cv::COLOR_BGR2GRAY);
-//    cv::Mat mask;
-//    threshold(edges, mask, 200nn, 250, cv::THRESH_BINARY_INV);
-//    edges.setTo(cv::Scalar(0, 0 ,0), mask);
-//    cv::imshow("Threshhold Frame", edges);
-//    Canny(edges, edges, 50, 150);  // Apply Canny edge detection
+    cv::Mat mask;
+    threshold(edges, mask, 200, 250, cv::THRESH_BINARY_INV);
+    edges.setTo(cv::Scalar(0, 0, 0), mask);
+    //    cv::imshow("Threshhold Frame", edges);
+    //    Canny(edges, edges, 50, 150);  // Apply Canny edge detection
 
-
-    cv::imshow("Current Frame", edges);
-    cv::imshow("Old Frame", prevEdges);
+    //    prevEdges.convertTo(prevEdges, CV_8UC1);
+    //    cv::imshow("Old Frame", prevEdges);
+    //    prevEdges.convertTo(prevEdges, CV_32FC1);
+    //    cv::imshow("Current Frame", edges);
 
     // Compute the phase correlation
     edges.convertTo(edges, CV_32FC1);
@@ -245,19 +255,25 @@ TEST(LocalizationTest, phaseCorrelation) {
 
     // Display the result
     std::cout << "Phase shift: " << phaseShift.x << ", " << phaseShift.y
-              << std::endl;
+              << ", Time: " << time_counter / 20 << "s" << std::endl;
 
-    coords.add_vector(phaseShift.x, phaseShift.y, 0);
+    if (phaseShift.x > 2 || phaseShift.y > 2 || phaseShift.x < -2 ||
+        phaseShift.y < -2) {
+      coords.add_vector(phaseShift.x, phaseShift.y, 0);
+    }
 
-    logFileStream << setprecision(4) << coords.x << " " << coords.y
-                  << std::endl;
+    logFileStream << setprecision(4) << coords.x << " " << coords.y << " "
+                  << time_counter / 20 << std::endl;
+
+    logShiftFile << setprecision(4) << phaseShift.x << " " << phaseShift.y
+                 << " " << time_counter << std::endl;
 
     // Update the previous edges
     edges.copyTo(prevEdges);
+    edges.release();
 
     // Exit the loop if 'q' is pressed
-//    cv::waitKey(0);  // Press 'p' to pause/unpause
-
+    //    cv::waitKey(0);  // Press 'p' to pause/unpause
   }
 
   // Release the video capture and close the windows

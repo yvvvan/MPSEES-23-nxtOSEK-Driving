@@ -3,7 +3,6 @@
 #include "slam/localization.hpp"
 
 TEST(localization_ci_test, adjust_driving_direction) {
-
   Localization localization;
 
   localization.adjust_driving_direction(0.0);
