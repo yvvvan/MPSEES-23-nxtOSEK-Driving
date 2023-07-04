@@ -93,11 +93,13 @@ void Localization::reset_clock() {
 }
 
 void Localization::handle_intersection(double angle, long time_difference) {
+  if (!intersection) accum_time = 0;
+
   if (!blackboard.intersection_detected.get()) {
     accum_time += time_difference;
   }
 
-  if (accum_time > INTERSECTION_SEC_RANGE * 1000){
+  if (accum_time > INTERSECTION_SEC_RANGE * 1000) {
     accum_time = 0;
     intersection = false;
     intersection_driven = false;
@@ -109,12 +111,12 @@ void Localization::handle_intersection(double angle, long time_difference) {
   }
 
   accum_angle += angle;
-  if (accum_angle >= 80) {
+  if (accum_angle >= 70) {
     accum_angle = 0;
     this->adjust_driving_direction(90);
     intersection_driven = true;
 
-  } else if (accum_angle <= -80) {
+  } else if (accum_angle <= -70) {
     accum_angle = 0;
     this->adjust_driving_direction(-90);
     intersection_driven = true;
@@ -146,13 +148,13 @@ Coordinates Localization::driving_tracking(long time_difference) {
   }
 
   /* calculate new driving direction */
-//  if (angle >= 90 || angle <= -90) {
-//    angle = 90;
-//  }
+  //  if (angle >= 90 || angle <= -90) {
+  //    angle = 90;
+  //  }
   angle = angle * (double)time_difference / 1000 * speed * -1.3;
   if (this->blackboard.intersection_detected.get() || this->intersection) {
-      this->intersection = true;
-      this->handle_intersection(angle, time_difference);
+    this->intersection = true;
+    this->handle_intersection(angle, time_difference);
   } else {
     this->adjust_driving_direction(angle);
   }
