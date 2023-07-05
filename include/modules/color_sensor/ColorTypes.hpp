@@ -22,10 +22,9 @@ struct ColorRange {
   Color min;
   Color max;
 
-  [[nodiscard]] bool contains(Color color) const {
-    return color.hue >= min.hue && color.hue <= max.hue &&
-        color.sat >= min.sat && color.sat <= max.sat &&
-        color.val >= min.val && color.val <= max.val;
+  [[nodiscard]] bool contains(Color color, bool only_hue = false) const {
+    return (color.hue >= min.hue && color.hue <= max.hue) &&
+        (only_hue || (color.sat >= min.sat && color.sat <= max.sat && color.val >= min.val && color.val <= max.val));
   }
 
   friend std::ostream &operator<<(std::ostream &os, ColorRange const &range) {
@@ -34,6 +33,7 @@ struct ColorRange {
               << ", max: " << range.max.hue << ", " << range.max.sat << ", " << range.max.val << "}";
   }
 };
+
 } // namespace Color
 
 #endif //GEORDI_INCLUDE_MODULES_COLOR_SENSOR_COLORTYPES_HPP_

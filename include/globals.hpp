@@ -44,6 +44,11 @@ constexpr char SERIAL_DEVICE[] = "/dev/serial0";
 
 /* color sensor parameters */
 constexpr int PORT_COLOR_SENSOR = 2;
+constexpr int MIN_CALIBRATION_OFFSET = 3;
+
+// everything below these values is considered black, thus, the floor (we ignore the hue)
+constexpr int COLOR_MIN_SAT = 7;
+constexpr int COLOR_MIN_VAL = 7;
 
 /* drive parameters */
 constexpr int PORT_LEFT_MOTOR = 3;

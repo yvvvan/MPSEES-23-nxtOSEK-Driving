@@ -17,13 +17,17 @@ ColorSensor::ColorSensor(uint8_t port) {
 
   this->port = port;
 
-  buildHat.serial_write_line("port " + std::to_string(this->port) + "; set -1");
+  // sometimes the sensor gets stuck in an off mode but doesn't know it, so we explicitly turn it off
+  buildHat.serial_write_line("port " + std::to_string(this->port) + " ; set 0", false);
+
+  // and only then turn it on
+  buildHat.serial_write_line("port " + std::to_string(this->port) + " ; set -1", false);
 
   this->available = true;
 }
 
 ColorSensor::~ColorSensor() {
-  buildHat.serial_write_line("port " + std::to_string(this->port) + "; set 0");
+  buildHat.serial_write_line("port " + std::to_string(this->port) + " ; set 0", false);
 }
 
 void ColorSensor::calibrate() {
@@ -51,6 +55,12 @@ void ColorSensor::calibrate() {
     double hue_sd = 0;
     double sat_sd = 0;
     double val_sd = 0;
+    double avg_hue_percent = 0;
+    double avg_sat_percent = 0;
+    double avg_val_percent = 0;
+    double hue_offset = 0;
+    double sat_offset = 0;
+    double val_offset = 0;
 
     // take five measurements over one second
     for (int i = 0; i < 5; i++) {
@@ -64,7 +74,7 @@ void ColorSensor::calibrate() {
       std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
-    // calculate average#include <cmath>
+    // calculate average
     avg_hue /= 5;
     avg_sat /= 5;
     avg_val /= 5;
@@ -80,11 +90,26 @@ void ColorSensor::calibrate() {
     sat_sd = std::sqrt(sat_sd / 5);
     val_sd = std::sqrt(val_sd / 5);
 
+    // calculate 5% of average
+    avg_hue_percent = avg_hue * 0.05;
+    avg_sat_percent = avg_sat * 0.05;
+    avg_val_percent = avg_val * 0.05;
+
+    // pick whichever is larger, sd or 5% of average
+    hue_offset = hue_sd > avg_hue_percent ? hue_sd : avg_hue_percent;
+    sat_offset = sat_sd > avg_sat_percent ? sat_sd : avg_sat_percent;
+    val_offset = val_sd > avg_val_percent ? val_sd : avg_val_percent;
+
+    // but at least MIN_CALIBRATION_OFFSET
+    hue_offset = hue_offset > MIN_CALIBRATION_OFFSET ? hue_offset : MIN_CALIBRATION_OFFSET;
+    sat_offset = sat_offset > MIN_CALIBRATION_OFFSET ? sat_offset : MIN_CALIBRATION_OFFSET;
+    val_offset = val_offset > MIN_CALIBRATION_OFFSET ? val_offset : MIN_CALIBRATION_OFFSET;
+
     // print color with +- standard deviation to file
     file << colorName << std::endl;
-    file << (avg_hue - hue_sd) << " " << (avg_hue + hue_sd) << std::endl;
-    file << (avg_sat - sat_sd) << " " << (avg_sat + sat_sd) << std::endl;
-    file << (avg_val - val_sd) << " " << (avg_val + val_sd) << std::endl;
+    file << std::floor(avg_hue - hue_offset) << " " << std::ceil(avg_hue + hue_offset) << std::endl;
+    file << std::floor(avg_sat - sat_offset) << " " << std::ceil(avg_sat + sat_offset) << std::endl;
+    file << std::floor(avg_val - val_offset) << " " << std::ceil(avg_val + val_offset) << std::endl;
   };
 
   calibrateColor("red");
@@ -138,11 +163,8 @@ Color::Color ColorSensor::get_color() {
     return {};
   }
 
-  // issue data request
-  buildHat.serial_write_line("port " + std::to_string(this->port) + " ; selonce 6");
-
   // read data
-  auto data = buildHat.serial_read_line();
+  auto data = buildHat.serial_write_read("port " + std::to_string(this->port) + " ; selonce 6");
 
   // strip prefix
   data = data.substr(6);
@@ -152,7 +174,7 @@ Color::Color ColorSensor::get_color() {
   int hue, sat, val;
   iss >> hue >> sat >> val;
 
-  if (hue == sat == val == 0) {
+  if (hue == 0 && sat == 0 && val == 0) {
     std::cerr << "Got no color" << std::endl;
     return {};
   }

@@ -116,16 +116,23 @@ void RobotController::execute() {
     }
   }
 */
-/*
+
   auto color = colorSensor.get_color();
   for (auto const &range : blackBoard.colors.get()) {
-    if (range.contains(color)) {
+    if (color.sat <= COLOR_MIN_SAT && color.val <= COLOR_MIN_VAL) {
+      // not a color
+      break;
+    }
+
+    // TODO: before we actually announce a color, we should have seen it N times in a row
+
+    if (range.contains(color, true)) {
       std::cout << "----------------------------------------" << std::endl;
       std::cout << ">>> Seeing color: " << range.name << std::endl;
       std::cout << "----------------------------------------" << std::endl;
+      break;
     }
   }
-*/
 
   // get the angle from the blackboard
   double angle = blackBoard.offset_middle_line.get();

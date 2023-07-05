@@ -1,16 +1,9 @@
-#include <array>
-#include <cmath>
-#include <thread>
-
 #include "modules/color_sensor/ColorSensor.hpp"
 
-
-
-
 // load calibration file, then ask for each color by name, check if measurement is within range
-bool test_calibration() {
+void test_calibration() {
   ColorSensor colorSensor;
-  auto colors = colorSensor.parse_calibration_file();
+  auto colors = ColorSensor::parse_calibration_file();
 
   // tell user what's happening
   std::cout << "> Testing calibration." << std::endl;
@@ -32,15 +25,11 @@ bool test_calibration() {
 
   std::cout << std::endl;
   std::cout << "> Calibration test complete." << std::endl;
-
-  return true;
 }
 
 int main() {
   ColorSensor colorSensor;
-  std::cout << colorSensor.get_color() << std::endl;
-  /*
   colorSensor.calibrate();
-  test_calibration();*/
+  test_calibration();
   return 0;
 }

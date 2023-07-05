@@ -38,6 +38,7 @@ class BuildHat : public ISerialReadWrite {
 
   void serial_write_line(std::string const &data = "", bool log = true, std::string const &alt = "") override;
   std::string serial_read_line(bool log = false, std::string const &alt = "") override;
+  std::string serial_write_read(std::string const &data, bool log = false, std::string const &alt = "") override;
 
  GEORDI_PRIVATE:
   /**
@@ -117,10 +118,10 @@ class BuildHat : public ISerialReadWrite {
   static std::mutex instance_mutex_;
 
   /**
-   * @brief locks access to serial interface
+   * @brief locks access to serial interface - recursive mutex to allow multiple calls internally
    * 
    */
-  static std::mutex serial_access_mutex_;
+  static std::recursive_mutex serial_access_mutex_;
 };
 
 #endif //BUILDHAT_BUILDHAT_HPP

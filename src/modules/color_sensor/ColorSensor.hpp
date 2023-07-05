@@ -20,8 +20,10 @@ class ColorSensor {
   static ColorSensor &getInstance();
 
   /**
-   * @brief calibrate the color sensor
-   *
+   * @brief store calibration file:
+   *    - read color from sensor
+   *    - write color +- first standard deviation or +- 5% (whichever is larger) to file
+   *    - repeat for all (four) colors
    */
   void calibrate();
 
