@@ -51,6 +51,8 @@ constexpr int COLOR_MIN_SAT = 7;
 constexpr int COLOR_MIN_VAL = 7;
 
 /* drive parameters */
+constexpr double CAR_SPEED = 2.0/3.0;
+
 constexpr int PORT_LEFT_MOTOR = 3;
 constexpr bool INVERT_LEFT_MOTOR = false;
 
@@ -69,11 +71,12 @@ constexpr int FPS          = 30;
 constexpr int IMAGE_WIDTH  = 640;
 constexpr int IMAGE_HEIGHT = 480;
 
-
-/* lane detection */
-constexpr int QUEUE_SIZE              = FPS / 5;
-constexpr int INTERSECTION_QUEUE_SIZE = FPS / 2;
-constexpr double IMAGE_MIDDLE         = IMAGE_WIDTH / 2.0;
+// lane detection
+constexpr int QUEUE_SIZE                  = FPS / 5;
+constexpr int INTERSECTION_QUEUE_SIZE     = FPS / 2;
+constexpr double IMAGE_MIDDLE             = IMAGE_WIDTH / 2.0;
+constexpr double MISSING_LANE_MULTIPLIER  = 2.0;
+constexpr double LANE_DETECTION_MIN_SLOPE = 0.5;
 
 // canny
 constexpr int CANNY_THRESHOLD_1 = 50;
@@ -85,9 +88,5 @@ constexpr int HOUGH_THRESHOLD    = 15;
 constexpr int HOUGH_MIN_LINE_LEN = 10;
 constexpr int HOUGH_MAX_LINE_GAP = 20;
 constexpr double HOUGH_THETA     = M_PI / 180.0;
-
-// lane detection
-constexpr double MISSING_LANE_MULTIPLIER  = 2.0;
-constexpr double LANE_DETECTION_MIN_SLOPE = 0.5;
 
 #endif //BUILDHAT_GLOBALS_HPP

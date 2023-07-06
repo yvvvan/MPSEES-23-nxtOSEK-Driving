@@ -25,14 +25,13 @@ class RobotController {
 
   void terminate();
 
+  void processColorSensor();
+
+  double getProcessedLaneAngle();
+
   // used for time keeping
   std::chrono::time_point<std::chrono::system_clock> start;
   std::chrono::time_point<std::chrono::system_clock> lap;
-
-  // store one angle in the past to ensure that the car does not turn too fast
-  double last_angle = 0;
-
-  int wtf_counter = 0;
 
   bool should_turn_left = false;
   std::chrono::time_point<std::chrono::system_clock> leftTurnTime;

@@ -445,13 +445,12 @@ void LaneDetection::return_function() {
 
     std::cout
             << "LaneDetection: "
-            << "angle: " << angle
+            //<< "angle: " << angle
             << ",\tisIntersection: " << find_majority_bool_deque(this->is_intersection)
-            << ", exits_intersection: " << debug_result_exits_intersection[0] << debug_result_exits_intersection[1]
-            << debug_result_exits_intersection[2]
+            //<< ", exits_intersection: " << debug_result_exits_intersection[0] << debug_result_exits_intersection[1] << debug_result_exits_intersection[2]
             << ", is_dead_end: " << find_majority_bool_deque(this->is_dead_end)
-            << ", hasLeftLane: " << this->hasLeftLane
-            << ", hasRightLane: " << this->hasRightLane
+            //<< ", hasLeftLane: " << this->hasLeftLane
+            //<< ", hasRightLane: " << this->hasRightLane
             << std::endl;
 
     int lane_count = 0;
@@ -577,7 +576,7 @@ void LaneDetection::main_loop_camera() {
     capture >> image;
     int width = image.cols;   // Get the width of the image
     int height = image.rows;  // Get the height of the image
-
+/*
     cv::VideoWriter writer;
     std::string outputFilename = "/home/pi/code_output.avi";
     int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');  // Codec for MP4
@@ -587,7 +586,7 @@ void LaneDetection::main_loop_camera() {
     writer.open(outputFilename, codec, fps, frameSize);
     if (!writer.isOpened()) {
         std::cout << "Could not open the output video file for writing." << std::endl;
-    }
+    }*/
 
     // creating an opencv window to display the processed frames
     /*cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
@@ -603,7 +602,7 @@ void LaneDetection::main_loop_camera() {
         // read frame and store it in the lane detection object
         capture >> this->frame;
 
-        writer.write(this->frame);
+        //writer.write(this->frame);
 
         if (!this->blackboard.buildHatReady.get()) {
             return;
@@ -622,7 +621,7 @@ void LaneDetection::main_loop_camera() {
         // process image frame and display it
         process_image_frame();
 
-        // update fps counter
+        /*// update fps counter
         fps_counter++;
         end = std::chrono::high_resolution_clock::now();
         elapsed = end - start;
@@ -630,7 +629,7 @@ void LaneDetection::main_loop_camera() {
             std::cout << "FPS: " << fps_counter << std::endl;
             fps_counter = 0;
             start = std::chrono::high_resolution_clock::now();
-        }
+        }*/
 
         // exit if ESC is pressed
         /*if (cv::waitKey(1) == 27) {
@@ -638,8 +637,8 @@ void LaneDetection::main_loop_camera() {
         }*/
     }
 
-    std::cout << "releasing writer" << std::endl;
-    writer.release();
+    //std::cout << "releasing writer" << std::endl;
+    //writer.release();
 
     std::cout << "releasing cap" << std::endl;
     capture.release();
@@ -747,7 +746,7 @@ double LaneDetection::calculate_center_offset_average() {
 
     for (const auto &offset: this->offset_queue) {
         slope_sum += offset;
-        std::cout << "Slope: " << offset << std::endl;
+        //std::cout << "Slope: " << offset << std::endl;
     }
 
     double avg = slope_sum / QUEUE_SIZE;

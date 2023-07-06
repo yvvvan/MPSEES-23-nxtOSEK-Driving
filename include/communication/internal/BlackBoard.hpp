@@ -9,6 +9,7 @@
 #include <array>
 #include <mutex>
 #include <vector>
+#include <optional>
 
 /**
  * @brief common, synchronised data exchange
@@ -39,6 +40,9 @@ class BlackBoard {
 
   // Color sensor
   SmartMember<std::vector<Color::ColorRange> > colors;              // vector of colors
+  SmartMember<std::optional<Color::ColorRange> > current_color;     // current color
+  SmartMember<std::optional<Color::ColorRange> > target_color;      // target color
+  SmartMember<bool> on_target_color{false};                           // flag indicating that the car is on the target color
 
   // Lane detection
   SmartMember<bool> lane_detection_ready{false};                    // flag indicating that the lane detection is ready

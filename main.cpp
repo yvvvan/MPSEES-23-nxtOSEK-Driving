@@ -43,11 +43,13 @@ int test_main() {
   return 0;
 }
 
+// TODO: detect power fault
+
 int main() {
   auto &blackBoard{BlackBoard::getInstance()};
   blackBoard.running = true;
 
-  return test_main(); // globals: min cal offset = 2
+  //return test_main(); // globals: min cal offset = 2
 
   // create a new thread and detach which handles lane detection
   std::thread([]() {

@@ -36,8 +36,10 @@ void Drive::move_forward(double angle) {
     return;
   }
 
-  double effective_speed = (1-this->speed) / (FORWARD_ANGLE/2.0) * std::abs(angle) + this->speed;
+  // calculate effective speed, which is a function of the angle
+  double effective_speed = (1 - this->speed) / (FORWARD_ANGLE/2.0) * std::abs(angle) + this->speed;
 
+  // limit effective speed to 90% to avoid drawing to much current
   if (effective_speed > .9) {
     effective_speed = .9;
   }

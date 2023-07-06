@@ -27,6 +27,11 @@ struct ColorRange {
         (only_hue || (color.sat >= min.sat && color.sat <= max.sat && color.val >= min.val && color.val <= max.val));
   }
 
+  bool operator==(ColorRange const &other) const {
+    return name == other.name; /* && min.hue == other.min.hue && min.sat == other.min.sat && min.val == other.min.val &&
+        max.hue == other.max.hue && max.sat == other.max.sat && max.val == other.max.val;*/
+  }
+
   friend std::ostream &operator<<(std::ostream &os, ColorRange const &range) {
     return os << "ColorRange " << range.name
               << ": {min: " << range.min.hue << ", " << range.min.sat << ", " << range.min.val

@@ -166,6 +166,11 @@ Color::Color ColorSensor::get_color() {
   // read data
   auto data = buildHat.serial_write_read("port " + std::to_string(this->port) + " ; selonce 6");
 
+  if (data.length() < 6) {
+    std::cerr << "ColorSensor: not available: " << data << std::endl;
+    return {};
+  }
+
   // strip prefix
   data = data.substr(6);
 
@@ -175,7 +180,7 @@ Color::Color ColorSensor::get_color() {
   iss >> hue >> sat >> val;
 
   if (hue == 0 && sat == 0 && val == 0) {
-    std::cerr << "Got no color" << std::endl;
+    //std::cerr << "Got no color" << std::endl;
     return {};
   }
 
