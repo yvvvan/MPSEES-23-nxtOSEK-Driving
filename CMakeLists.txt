@@ -75,7 +75,7 @@ target_link_libraries(${PROJECT_NAME}_lib
    stdc++fs
    bluetooth
    ${LIBSERIAL_LIBRARY}
-#   ${OpenCV_LIBS}
+   ${OpenCV_LIBS}
 #   ${EIGEN3_LIBS}
 #   ${Pangolin_LIBRARIES}
 #   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
@@ -88,7 +88,7 @@ target_link_libraries(${PROJECT_NAME}_test_lib
    stdc++fs
    bluetooth
    ${LIBSERIAL_LIBRARY}
-#   ${OpenCV_LIBS}
+   ${OpenCV_LIBS}
 #   ${EIGEN3_LIBS}
 #   ${Pangolin_LIBRARIES}
 #   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
