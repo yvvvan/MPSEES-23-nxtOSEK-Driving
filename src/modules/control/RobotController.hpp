@@ -46,6 +46,10 @@ class RobotController {
   IMovement &drive = Drive::getInstance();
   BlackBoard &blackBoard = BlackBoard::getInstance();
   ColorSensor &colorSensor = ColorSensor::getInstance();
+
+  // create log file
+  std::ofstream log_file;
+  // ColorSensor &colorSensor = ColorSensor::getInstance();
 };
 
 #endif  // GEORDI_SRC_MODULES_CONTROL_ROBOTCONTROLLER_HPP_

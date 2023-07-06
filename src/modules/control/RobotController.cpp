@@ -148,5 +148,17 @@ void RobotController::execute() {
 
   // no special conditions apply, just drive according to the line
   double angle = getProcessedLaneAngle();
+
+  log_file.open("/home/pi/sample_log.txt", std::ios::app);
+  log_file << angle << " " << 0.6
+           << " "  // should be the speed, but it's always the same
+           << blackBoard.is_intersection.get() << " "
+           << blackBoard.exits_intersection.get()[0] << " "
+           << blackBoard.exits_intersection.get()[1] << " "
+           << blackBoard.exits_intersection.get()[2] << " " << time_total << " "
+           << "\n"
+           << std::endl;
+  log_file.close();
+
   drive.move_forward(angle);
 }

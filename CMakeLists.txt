@@ -20,8 +20,8 @@ file(GLOB_RECURSE HEADERS "src/*.hpp" "include/*.hpp")
 
 # Local libraries
 include_directories(${CMAKE_SOURCE_DIR}/lib/)
-file(GLOB_RECURSE LOCAL_LIBRARY_SOURCES "lib/*.cpp")
-file(GLOB_RECURSE LOCAL_LIBRARY_HEADERS "lib/*.hpp")
+file(GLOB_RECURSE LOCAL_LIBRARY_SOURCES "lib/remote_control/*.cpp")
+file(GLOB_RECURSE LOCAL_LIBRARY_HEADERS "lib/remote_control/*.hpp")
 
 # Locate the libserial and opencv libraries
 find_package(OpenCV)
