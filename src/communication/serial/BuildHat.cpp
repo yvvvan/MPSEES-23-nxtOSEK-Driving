@@ -2,7 +2,7 @@
 
 /* own headers */
 #include "globals.hpp"
-#include "remote_control/utils/Utilities.hpp"
+#include "utils/Utilities.hpp"
 
 /* library headers */
 #include <thread>
