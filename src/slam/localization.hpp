@@ -1,13 +1,15 @@
 #ifndef LOCALIZATION_HPP
 #define LOCALIZATION_HPP
 
+// #define USE_ORB_SLAM 1
+
+#ifdef USE_ORB_SLAM
 #include <System.h>
+#endif
 
 #include <opencv2/opencv.hpp>
 
 #include "blackboard/BlackBoard.hpp"
-
-#define USE_ORB_SLAM 1
 
 #define INTERSECTION_SEC_RANGE 1
 
