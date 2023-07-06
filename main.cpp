@@ -1,14 +1,14 @@
+#include <csignal>
 #include <thread>
 
+#include "communication/internal/BlackBoard.cpp"
 #include "communication/serial/BuildHat.hpp"
 #include "communication/serial/ISerialRead.hpp"
-#include "modules/movement/IMovement.hpp"
-#include "modules/movement/Drive.hpp"
-#include "remote_control/DS4.hpp"
-
-#include "communication/internal/BlackBoard.cpp"
-#include "modules/lane_detection/LaneDetection.hpp"
 #include "modules/control/RobotController.hpp"
+#include "modules/lane_detection/LaneDetection.hpp"
+#include "modules/movement/Drive.hpp"
+#include "modules/movement/IMovement.hpp"
+#include "remote_control/DS4.hpp"
 
 int test_main() {
   ColorSensor colorSensor;

@@ -1,18 +1,16 @@
 #ifndef GEORDI_SRC_MODULES_CONTROL_ROBOTCONTROLLER_HPP_
 #define GEORDI_SRC_MODULES_CONTROL_ROBOTCONTROLLER_HPP_
 
-#include "globals.hpp"
-
-#include "modules/movement/Drive.hpp"
-#include "modules/color_sensor/ColorSensor.hpp"
 #include "communication/internal/BlackBoard.hpp"
+#include "globals.hpp"
+#include "modules/color_sensor/ColorSensor.hpp"
+#include "modules/movement/Drive.hpp"
 
 /**
  * @brief The RobotController class is responsible for controlling the robot.
  */
 class RobotController {
- GEORDI_PUBLIC:
-  RobotController();
+  GEORDI_PUBLIC : RobotController();
   ~RobotController();
 
   /**
@@ -20,8 +18,7 @@ class RobotController {
    */
   void execute();
 
- GEORDI_PRIVATE:
-  void init();
+  GEORDI_PRIVATE : void init();
 
   void terminate();
 
@@ -51,4 +48,4 @@ class RobotController {
   ColorSensor &colorSensor = ColorSensor::getInstance();
 };
 
-#endif //GEORDI_SRC_MODULES_CONTROL_ROBOTCONTROLLER_HPP_
+#endif  // GEORDI_SRC_MODULES_CONTROL_ROBOTCONTROLLER_HPP_

@@ -1,17 +1,13 @@
 #include "RobotController.hpp"
 
-#include "modules/control/PDController.hpp"
-#include "modules/color_sensor/ColorSensor.hpp"
-
 #include <thread>
 
-RobotController::RobotController() {
-  init();
-}
+#include "modules/color_sensor/ColorSensor.hpp"
+#include "modules/control/PDController.hpp"
 
-RobotController::~RobotController() {
-  terminate();
-}
+RobotController::RobotController() { init(); }
+
+RobotController::~RobotController() { terminate(); }
 
 void RobotController::init() {
   // set the speed of the car
@@ -44,11 +40,12 @@ void RobotController::processColorSensor() {
         blackBoard.current_color = range;
         found_color = true;
 
-        //std::cout << "I see the color: " << range.name << std::endl;
+        // std::cout << "I see the color: " << range.name << std::endl;
 
         // check whether the car is on the target color, if any
-        auto target_color = blackBoard.target_color_name.get();
-        blackBoard.on_target_color.set(target_color && range == target_color.value());
+        auto target_color = blackBoard.target_color.get();
+        blackBoard.on_target_color.set(target_color &&
+                                       range == target_color.value());
         break;
       }
     }
