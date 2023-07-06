@@ -134,8 +134,8 @@ TEST(LocalizationTest, TestORBSLAM) {
 }
 #endif
 
-#define SPEED_ENTRY 0
-#define ANGLE_ENTRY 1
+#define SPEED_ENTRY 1
+#define ANGLE_ENTRY 0
 #define INTERSECTION_DETECTED 2
 #define TIME_ENTRY 6
 
@@ -144,7 +144,7 @@ TEST(LocalizationTest, TestORBSLAM) {
  */
 TEST(LocalizationTest, TestDrivingTracking) {
   const std::string testFile =
-      directory + "/testfiles/example_logs/driving1_log.txt";
+      directory + "/testfiles/example_logs/curve_backwards.txt";
   const std::string logFile = directory + "/testfiles/example_logs/coords.txt";
   const std::string logAngleFile =
       directory + "/testfiles/example_logs/angles.txt";
@@ -182,7 +182,7 @@ TEST(LocalizationTest, TestDrivingTracking) {
     }
 
     long new_time = std::stol(values[TIME_ENTRY]);
-    long time_diff = new_time - old_time;
+    long time_diff = 1000/42;
     Coordinates coords = localization.driving_tracking(time_diff);
     time += time_diff;
     old_time = new_time;
