@@ -24,16 +24,17 @@ test:
     - build
   image: $DOCKER_IMAGE_NAME
   script:
-    - echo "This is where I'd put my tests if I had them"
+    - export GTEST_OUTPUT=xml:rspec.xml
+    - /app/build/bin/ci_test
   tags:
     - docker
 # Report unit test results in CI
-#  artifacts:
-#    when: always
-#    paths:
-#      - rspec.xml
-#    reports:
-#      junit: rspec.xml
+  artifacts:
+    when: always
+    paths:
+      - rspec.xml
+    reports:
+      junit: rspec.xml
 
 export:
   needs:
