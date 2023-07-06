@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <fstream>
 #include <future>
 #include <opencv2/opencv.hpp>
 #include <thread>
@@ -32,7 +33,7 @@ int runVideo(const std::string &videoFile) {
     cap >> frame;
 
     if (frame.empty()) {
-      cout << "Empty frame" << endl;
+      std::cout << "Empty frame" << std::endl;
       break;
     }
 
@@ -67,7 +68,7 @@ int runCamera() {
     cap >> frame;
 
     if (frame.empty()) {
-      cout << "Empty frame" << endl;
+      std::cout << "Empty frame" << std::endl;
       break;
     }
 
@@ -144,7 +145,7 @@ TEST(LocalizationTest, TestORBSLAM) {
  */
 TEST(LocalizationTest, TestDrivingTracking) {
   const std::string testFile =
-      directory + "/testfiles/example_logs/curve_backwards.txt";
+      directory + "/testfiles/example_logs/curve_forward.txt";
   const std::string logFile = directory + "/testfiles/example_logs/coords.txt";
   const std::string logAngleFile =
       directory + "/testfiles/example_logs/angles.txt";
@@ -190,14 +191,14 @@ TEST(LocalizationTest, TestDrivingTracking) {
               << l_blackboard.angle.get() << " " << l_blackboard.speed.get()
               << " " << l_blackboard.intersection_detected.get() << " "
               << coords.to_string() << std::endl;
-    logFileStream << setprecision(4) << coords.x << " " << coords.y
+    logFileStream << std::setprecision(4) << coords.x << " " << coords.y
                   << std::endl;
-    logAngleFileStream << setprecision(4) << l_blackboard.angle.get() << " "
-                       << l_blackboard.speed.get() << " " << time << " "
+    logAngleFileStream << std::setprecision(4) << l_blackboard.angle.get()
+                       << " " << l_blackboard.speed.get() << " " << time << " "
                        << l_blackboard.intersection_detected.get() << std::endl;
   }
 
-  cout << "Finished reading test file" << endl;
+  std::cout << "Finished reading test file" << std::endl;
   test_file.close();
 
   logFileStream.close();
@@ -262,10 +263,10 @@ TEST(LocalizationTest, phaseCorrelation) {
       coords.add_vector(phaseShift.x, phaseShift.y, 0);
     }
 
-    logFileStream << setprecision(4) << coords.x << " " << coords.y << " "
+    logFileStream << std::setprecision(4) << coords.x << " " << coords.y << " "
                   << time_counter / 20 << std::endl;
 
-    logShiftFile << setprecision(4) << phaseShift.x << " " << phaseShift.y
+    logShiftFile << std::setprecision(4) << phaseShift.x << " " << phaseShift.y
                  << " " << time_counter << std::endl;
 
     // Update the previous edges
