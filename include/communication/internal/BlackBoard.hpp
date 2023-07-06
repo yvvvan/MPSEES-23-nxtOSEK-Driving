@@ -41,7 +41,7 @@ class BlackBoard {
   // Color sensor
   SmartMember<std::vector<Color::ColorRange> > colors;              // vector of colors
   SmartMember<std::optional<Color::ColorRange> > current_color;     // current color
-  SmartMember<std::optional<Color::ColorRange> > target_color;      // target color
+  SmartMember<std::optional<std::string> > target_color_name;       // target color
   SmartMember<bool> on_target_color{false};                           // flag indicating that the car is on the target color
 
   // Lane detection

@@ -49,6 +49,8 @@ int main() {
   auto &blackBoard{BlackBoard::getInstance()};
   blackBoard.running = true;
 
+  blackBoard.target_color_name.set("orange");
+
   //return test_main(); // globals: min cal offset = 2
 
   // create a new thread and detach which handles lane detection
@@ -60,9 +62,16 @@ int main() {
   // TODO: ORB and webserver threads
 
   std::thread([&blackBoard]() {
+    namespace ch = std::chrono;
     RobotController robotController;
     while (blackBoard.running.get()) {
+      // take start time - we ensure that every iteration takes 25 ms, thus we have exactly 40 iterations per second
+      auto start = ch::high_resolution_clock::now();
       robotController.execute();
+      // calculate taken time
+      auto duration = ch::duration_cast<std::chrono::milliseconds>(ch::high_resolution_clock::now() - start).count();
+      // sleep so that the total time is 25 ms
+      std::this_thread::sleep_for(std::chrono::milliseconds{25 - duration});
     }
   }).join();
 

@@ -29,6 +29,14 @@ class RobotController {
 
   double getProcessedLaneAngle();
 
+  bool yeaCommaProbablyAnIntersection{false};
+  uint8_t intersection_counter{0};
+  uint8_t not_intersection_counter{0};
+
+  bool yeaCommaProbablyADeadEnd{false};
+  uint8_t dead_end_counter{0};
+  uint8_t not_dead_end_counter{0};
+
   // used for time keeping
   std::chrono::time_point<std::chrono::system_clock> start;
   std::chrono::time_point<std::chrono::system_clock> lap;

@@ -47,7 +47,7 @@ void RobotController::processColorSensor() {
         //std::cout << "I see the color: " << range.name << std::endl;
 
         // check whether the car is on the target color, if any
-        auto target_color = blackBoard.target_color.get();
+        auto target_color = blackBoard.target_color_name.get();
         blackBoard.on_target_color.set(target_color && range == target_color.value());
         break;
       }
@@ -80,6 +80,9 @@ double RobotController::getProcessedLaneAngle() {
 }
 
 void RobotController::execute() {
+  static bool bhfbe = false;
+  static bool bhfbe_dead_end = false;
+
   // only do anything at all when the build hat is ready
   if (!blackBoard.buildHatReady.get()) {
     return;
@@ -91,7 +94,7 @@ void RobotController::execute() {
   // TODO: remove for actual code
   {
     // check whether ten seconds have elapsed
-    if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 50) {
+    if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 30) {
       // initiate termination of the program
       blackBoard.running = false;
       return;
@@ -101,12 +104,65 @@ void RobotController::execute() {
   // process the color sensor
   processColorSensor();
 
+  if (blackBoard.is_dead_end.get()) {
+    dead_end_counter++;
+    not_dead_end_counter = 0;
+  } else {
+    dead_end_counter = 0;
+    not_dead_end_counter++;
+    // reset car speed
+    drive.set_speed(CAR_SPEED);
+  }
+
+  if (blackBoard.is_intersection.get()) {
+    intersection_counter++;
+    not_intersection_counter = 0;
+  } else {
+    intersection_counter = 0;
+    not_intersection_counter++;
+    // reset car speed
+    drive.set_speed(CAR_SPEED);
+  }
+
   /* ++++++++++++++ BEGIN check special conditions BEGIN ++++++++++++++ */
 
   // check whether the car is on the target color, if so, coast
   if (blackBoard.on_target_color.get()) {
-      drive.coast(); // TODO: maybe break?
-      return;
+    std::cout << "I am on the target color!" << std::endl;
+    drive.coast(); // TODO: maybe break?
+    return;
+  }
+
+  if (intersection_counter > 2) {
+    drive.set_speed(0.5);
+  }
+
+  if (dead_end_counter > 2) {
+    drive.set_speed(0.5);
+  }
+
+  if (intersection_counter > 7) {
+    std::cout << "Probably an intersection" << std::endl;
+    yeaCommaProbablyAnIntersection = true;
+  }
+
+  if (dead_end_counter > 7) {
+    std::cout << "Probably a dead end" << std::endl;
+    yeaCommaProbablyADeadEnd = true;
+  }
+
+  if (bhfbe || yeaCommaProbablyAnIntersection && not_intersection_counter > 5) {
+    bhfbe = true;
+    yeaCommaProbablyAnIntersection = false;
+    drive.coast();
+    return;
+  }
+
+  if (bhfbe || yeaCommaProbablyADeadEnd && not_dead_end_counter > 5) {
+    bhfbe_dead_end = true;
+    yeaCommaProbablyADeadEnd = false;
+    drive.coast();
+    return;
   }
 
   /* TODO
