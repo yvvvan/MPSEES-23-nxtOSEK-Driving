@@ -5,7 +5,6 @@
  */
 #include "localization.hpp"
 
-#include <System.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -151,7 +150,7 @@ Coordinates Localization::driving_tracking(long time_difference) {
   //  if (angle >= 90 || angle <= -90) {
   //    angle = 90;
   //  }
-  angle = angle * (double)time_difference / 1000 * speed * -1.3;
+  angle = angle * (double)time_difference / 1000 * speed * -1;
   if (this->blackboard.intersection_detected.get() || this->intersection) {
     this->intersection = true;
     this->handle_intersection(angle, time_difference);

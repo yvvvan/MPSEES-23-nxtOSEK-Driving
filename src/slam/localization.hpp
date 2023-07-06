@@ -61,7 +61,7 @@ class Localization {
   void handle_intersection(double angle, long time_difference);
 
   /* Current Driving Direction, starting with (1,0) */
-  array<double, 2> driving_direction{};
+  std::array<double, 2> driving_direction{};
 
  private:
 #ifdef USE_ORB_SLAM
