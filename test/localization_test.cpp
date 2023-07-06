@@ -182,7 +182,7 @@ TEST(LocalizationTest, TestDrivingTracking) {
     }
 
     long new_time = std::stol(values[TIME_ENTRY]);
-    long time_diff = 1000/42;
+    long time_diff = 1000 / 42;
     Coordinates coords = localization.driving_tracking(time_diff);
     time += time_diff;
     old_time = new_time;
