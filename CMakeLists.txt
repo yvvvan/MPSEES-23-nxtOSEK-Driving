@@ -6,7 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 include(GNUInstallDirs)
 
 if(NOT CMAKE_BUILD_TYPE)
+<<<<<<< HEAD
+  set(CMAKE_BUILD_TYPE "Debug")
+=======
    set(CMAKE_BUILD_TYPE "Debug")
+>>>>>>> 2ecef7725ec08a3e31b2f30f9a8d0a999447a8a7
 endif()
 
 # Set output directories

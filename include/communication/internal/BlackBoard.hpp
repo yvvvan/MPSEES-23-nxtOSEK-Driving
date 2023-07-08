@@ -74,16 +74,22 @@ class BlackBoard {
       coordinates;  // current coordinates returned by localization
   SmartMember<std::array<Coordinates, 4>>
       stations;  // coordinates of the 4 stations
-  SmartMember<std::map<int, std::array<int, 4>>> connection_map;
-  SmartMember<std::map<int, std::array<int, 4>>> duration_map;
 
   SmartMember<int> last_intersection;  // last intersection
   SmartMember<int>
       next_intersection;  // if mapping is finished, localization will update
                           // this value (and coordinates) based on the map
+  SmartMember<std::map<int, std::array<int, 4>>> cost_exits_map;
+  SmartMember<std::map<int, std::array<int, 4>>> connection_map;
+  SmartMember<std::map<int, std::array<int, 12>>> duration_map;
+
+  SmartMember<exit_t> exit;  // the exit to take at an intersection, it is just
+                             // a translation of direction->exit
 
   /* Path Finding*/
-  SmartMember<bool> pathfinding_enabled;
+  SmartMember<bool> navigation_enabled;
+  SmartMember<std::array<std::array<int, 12>, 2>>
+      path_found;  // path_found[0] = path, path_found[1] = exits
 
   /******* end of member variables *******/
   // clang-format off
