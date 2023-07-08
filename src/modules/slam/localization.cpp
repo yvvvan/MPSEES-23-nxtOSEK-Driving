@@ -8,9 +8,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <ctime>
 #include <opencv2/opencv.hpp>
-
 
 Localization::Localization() {
   this->driving_direction = {1, 0};
@@ -26,7 +26,7 @@ void Localization::reset_clock() {
 void Localization::handle_intersection(double angle, long time_difference) {
   if (!intersection) accum_time = 0;
 
-  if (!blackboard.intersection_detected.get()) {
+  if (!blackboard.is_intersection.get()) {
     accum_time += time_difference;
   }
 
@@ -62,7 +62,7 @@ double calc_cos(double angle) {
   return std::round(cos(angle * M_PI / 180) * 100) / 100;
 }
 
-Coordinates Localization::driving_tracking(long time_difference) {
+Coordinates Localization::track_driving_params(long time_difference) {
   //  auto curr_time = std::chrono::system_clock::now();
   //  long time_difference =
   //  std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -83,7 +83,7 @@ Coordinates Localization::driving_tracking(long time_difference) {
   //    angle = 90;
   //  }
   angle = angle * (double)time_difference / 1000 * speed * -1;
-  if (this->blackboard.intersection_detected.get() || this->intersection) {
+  if (this->blackboard.is_intersection.get() || this->intersection) {
     this->intersection = true;
     this->handle_intersection(angle, time_difference);
   } else {
@@ -109,4 +109,52 @@ void Localization::adjust_driving_direction(double new_angle) {
              this->driving_direction.at(1) * calc_cos(new_angle);
   this->driving_direction.at(0) = std::round(x * 100) / 100;
   this->driving_direction.at(1) = std::round(y * 100) / 100;
+}
+
+int get_index_of(std::array<int, 4> array, int value) {
+  for (int i = 0; i < array.size(); i++) {
+    if (array.at(i) == value) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void Localization::track_map() {
+  int last_intersection = blackboard.last_intersection.get();
+  int next_intersection = blackboard.next_intersection.get();
+  bool intersection_handled = blackboard.intersection_handled.get();
+  auto map = blackboard.connection_map.get();
+  direction_t turn_direction = blackboard.turn_direction.get();
+
+  if (intersection_handled && !intersection_handled_last) {
+    intersection_handled_last = true;
+
+    int current_direction =
+        get_index_of(map[next_intersection], last_intersection);
+    if (current_direction == -1) {
+      std::cout << "ERROR: Could not find current direction in map"
+                << std::endl;
+      return;
+    }
+
+    if (turn_direction == LEFT) {
+      current_direction = (current_direction + 1) % 4;
+    } else if (turn_direction == RIGHT) {
+      current_direction = (current_direction + 3) % 4;
+    } else if (turn_direction == STRAIGHT) {
+      current_direction = (current_direction + 2) % 4;
+    }
+    blackboard.last_intersection = next_intersection;
+    next_intersection = map.at(next_intersection).at(current_direction);
+    if (next_intersection == -1) {
+      std::cout << "ERROR: Could not find next intersection in map"
+                << std::endl;
+      return;
+    }
+    blackboard.next_intersection = next_intersection;
+
+  } else {
+    intersection_handled_last = false;
+  }
 }

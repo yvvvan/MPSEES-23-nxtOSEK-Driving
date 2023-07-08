@@ -1,3 +1,5 @@
+#include "modules/slam/localization.hpp"
+
 #include <gtest/gtest.h>
 
 #include <fstream>
@@ -6,7 +8,6 @@
 #include <thread>
 
 #include "communication/internal/BlackBoard.hpp"
-#include "modules/slam/localization.hpp"
 #include "helper.hpp"
 
 #define video
