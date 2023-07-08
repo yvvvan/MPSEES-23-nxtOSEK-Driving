@@ -4,7 +4,7 @@
 #include "globals.hpp"
 
 #include "SmartMember.hpp"
-#include "src/slam/coordinates.hpp"
+#include "modules/slam/coordinates.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <array>
@@ -52,6 +52,8 @@ class BlackBoard {
   SmartMember<bool> camera_enabled;
 
   /* Localization & Mapping */
+  SmartMember<double> angle;
+  SmartMember<double> speed;
   SmartMember<bool> localization_enabled;
   SmartMember<bool> mapping_enabled;
   SmartMember<bool> mapping_finished;

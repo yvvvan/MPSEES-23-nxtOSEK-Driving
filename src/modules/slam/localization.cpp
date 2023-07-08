@@ -11,81 +11,13 @@
 #include <ctime>
 #include <opencv2/opencv.hpp>
 
-#define MAXNOTRECEIVEDFRAMES 100
 
-#ifdef USE_ORB_SLAM
-Localization::Localization(std::string vocabularyFile, std::string configFile) {
-  this->vocabularyFile = vocabularyFile;
-  this->configFile = configFile;
-
-  /* create slam instance */
-  this->slam = new ORB_SLAM3::System(vocabularyFile, configFile,
-                                     ORB_SLAM3::System::MONOCULAR, false);
-}
-#endif
 Localization::Localization() {
   this->driving_direction = {1, 0};
   this->accum_angle = 0;
 }
 
-Localization::~Localization() {
-#ifdef USE_ORB_SLAM
-  /* Stop ORB SLAM */
-  if (slam->GetTrackingState() !=
-      ORB_SLAM3::Tracking::eTrackingState::SYSTEM_NOT_READY) {
-    slam->Shutdown();
-  }
-
-  /* Delete ORB SLAM */
-  if (this->slam != nullptr) {
-    delete this->slam;
-  }
-#endif
-}
-
-#ifdef USE_ORB_SLAM
-int Localization::exec_thread() {
-  int notReceivedFrames = 0;
-
-  /* Loop, which analyses the incoming camera frames */
-  while (this->blackboard.localization_enabled == true &&
-         this->blackboard.camera_enabled == true) {
-    auto frame = this->blackboard.frame.get().clone();
-
-    /* If the frame was read successfully */
-    if (!frame.empty()) {
-      // Get the current system time as a timestamp
-      std::time_t timestamp = std::time(nullptr);
-
-      Sophus::SE3f camera_pose = slam->TrackMonocular(frame, (double)timestamp);
-      cv::imshow("Frame", frame);
-
-      Eigen::Quaternionf q = camera_pose.unit_quaternion();
-      Eigen::Vector3f twb = camera_pose.translation();
-      // TODO translate to Coordinates Class correctly
-      this->blackboard.coordinates = Coordinates(twb(0), twb(1), twb(2));
-
-      std::cout << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x()
-                << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
-
-    } else {
-      notReceivedFrames++;
-
-      if (notReceivedFrames > MAXNOTRECEIVEDFRAMES) {
-        std::cerr << "No frame received for " << MAXNOTRECEIVEDFRAMES
-                  << " frames, exiting..." << std::endl;
-        return -1;
-      }
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-
-    frame.release();
-  }
-
-  return 0;
-}
-#endif
+Localization::~Localization() {}
 
 void Localization::reset_clock() {
   this->time = std::chrono::system_clock::now();

@@ -1,5 +1,3 @@
-#include "slam/localization.hpp"
-
 #include <gtest/gtest.h>
 
 #include <fstream>
@@ -7,7 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <thread>
 
-#include "blackboard/BlackBoard.hpp"
+#include "communication/internal/BlackBoard.hpp"
+#include "modules/slam/localization.hpp"
 #include "helper.hpp"
 
 #define video
@@ -76,65 +75,6 @@ int runCamera() {
   }
 }
 
-#ifdef USE_ORB_SLAM
-/**
- * @brief Test the constructor of the Localization class
- */
-TEST(LocalizationTest, Constructor) {
-  const std::string vocabularyFile =
-      "/home/jakob/Documents/SESE_Projekt/mpsees/lib/ORB_SLAM3/Vocabulary/"
-      "ORBvoc.txt";
-  const std::string configFile =
-      "/home/jakob/Documents/SESE_Projekt/mpsees/src/slam/mono_raspi_cam.yaml";
-  Localization localization(vocabularyFile, configFile);
-}
-
-/**
- * @brief Run the localization thread, with an example video
- */
-TEST(LocalizationTest, TestORBSLAM) {
-  // TODO configure this to use the test video -> mock camera or blackboard
-  const std::string vocabularyFile =
-      directory + "/../lib/ORB_SLAM3/Vocabulary/ORBvoc.txt";
-  const std::string configFile =
-      directory + "/testfiles/video_camera_config.yaml";
-  const std::string videoFile = directory + "/testfiles/code_output.avi";
-
-  //    blackboard.camera_enabled = true;
-  //    runVideo(videoFile);
-
-  Localization localization(vocabularyFile, configFile);
-
-  l_blackboard.camera_enabled = true;
-  l_blackboard.localization_enabled = true;
-
-#ifdef video
-  auto video_thread = std::async(runVideo, videoFile);
-#else
-  auto camera_thread = std::async(runCamera);
-#endif
-
-  auto localization_thread =
-      std::async(&Localization::exec_thread, &localization);
-//    while (video_thread.wait_for(std::chrono::milliseconds(50)) !=
-//    std::future_status::ready) {
-//        cv::imshow("Frame", blackboard.frame.get());
-//    }
-#ifdef video
-  video_thread.wait();
-  ASSERT_EQ(video_thread.get(), 0);
-#else
-  camera_thread.wait();
-  ASSERT_EQ(camera_thread.get(), 0);
-#endif
-
-  l_blackboard.localization_enabled = false;
-  l_blackboard.camera_enabled = false;
-  localization_thread.wait();
-  ASSERT_EQ(localization_thread.get(), 0);
-}
-#endif
-
 #define SPEED_ENTRY 1
 #define ANGLE_ENTRY 0
 #define INTERSECTION_DETECTED 2
@@ -177,9 +117,9 @@ TEST(LocalizationTest, TestDrivingTracking) {
     l_blackboard.angle.set(std::stod(values[ANGLE_ENTRY]));
 
     if (values[INTERSECTION_DETECTED] == "1") {
-      l_blackboard.intersection_detected.set(true);
+      l_blackboard.is_intersection.set(true);
     } else {
-      l_blackboard.intersection_detected.set(false);
+      l_blackboard.is_intersection.set(false);
     }
 
     long new_time = std::stol(values[TIME_ENTRY]);
@@ -189,13 +129,13 @@ TEST(LocalizationTest, TestDrivingTracking) {
     old_time = new_time;
     std::cout << "Time: " << time / 1000 << "s | " << new_time << " |"
               << l_blackboard.angle.get() << " " << l_blackboard.speed.get()
-              << " " << l_blackboard.intersection_detected.get() << " "
+              << " " << l_blackboard.is_intersection.get() << " "
               << coords.to_string() << std::endl;
     logFileStream << std::setprecision(4) << coords.x << " " << coords.y
                   << std::endl;
     logAngleFileStream << std::setprecision(4) << l_blackboard.angle.get()
                        << " " << l_blackboard.speed.get() << " " << time << " "
-                       << l_blackboard.intersection_detected.get() << std::endl;
+                       << l_blackboard.is_intersection.get() << std::endl;
   }
 
   std::cout << "Finished reading test file" << std::endl;

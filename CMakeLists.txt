@@ -17,22 +17,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Locate the libserial library
 find_library(LIBSERIAL_LIBRARY NAMES serial)
 
-#find_package(Eigen3 3.1.0 REQUIRED)
-#find_package(Pangolin REQUIRED)
-
 find_package(OpenCV 4.4)
    if(NOT OpenCV_FOUND)
       message(FATAL_ERROR "OpenCV > 4.4 not found.")
    endif()
-
-#set(ORB_SLAM_DIR ${CMAKE_SOURCE_DIR}/lib/ORB_SLAM3)
-#include_directories(${ORB_SLAM_DIR}
-#    ${ORB_SLAM_DIR}/include
-#    ${ORB_SLAM_DIR}/include/CameraModels
-#    ${ORB_SLAM_DIR}/Thirdparty/Sophus
-#    ${EIGEN3_INCLUDE_DIR}
-#    ${Pangolin_INCLUDE_DIRS}
-#    )
 
 # Add the include directory for libserial
 include_directories(${LIBSERIAL_INCLUDE_DIRS})
@@ -76,11 +64,6 @@ target_link_libraries(${PROJECT_NAME}_lib
    bluetooth
    ${LIBSERIAL_LIBRARY}
    ${OpenCV_LIBS}
-#   ${EIGEN3_LIBS}
-#   ${Pangolin_LIBRARIES}
-#   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-#   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
-#   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
    )
 
 target_link_libraries(${PROJECT_NAME}_test_lib
@@ -89,11 +72,6 @@ target_link_libraries(${PROJECT_NAME}_test_lib
    bluetooth
    ${LIBSERIAL_LIBRARY}
    ${OpenCV_LIBS}
-#   ${EIGEN3_LIBS}
-#   ${Pangolin_LIBRARIES}
-#   ${ORB_SLAM_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-#   ${ORB_SLAM_DIR}/Thirdparty/g2o/lib/libg2o.so
-#   ${ORB_SLAM_DIR}/lib/libORB_SLAM3.so
    )
 # ------------------------------------------------------- #
 

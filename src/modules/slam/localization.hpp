@@ -1,33 +1,16 @@
 #ifndef LOCALIZATION_HPP
 #define LOCALIZATION_HPP
 
-// #define USE_ORB_SLAM 1
-
-#ifdef USE_ORB_SLAM
-#include <System.h>
-#endif
-
 #include <opencv2/opencv.hpp>
 
-#include "blackboard/BlackBoard.hpp"
+#include "communication/internal/BlackBoard.hpp"
+#include "coordinates.hpp"
 
 #define INTERSECTION_SEC_RANGE 1
 
 class Localization {
  public:
   // TODO should this be a singleton?
-#ifdef USE_ORB_SLAM
-  /**
-   * @brief Construct a new Localization object
-   *
-   * @param vocabularyFile path to the ORB_SLAM vocabulary file
-   * (ORB_SLAM3/Vocabulary/ORBvoc.txt)
-   * @param configFile path to the ORB_SLAM camera config file
-   *
-   * @return Localization&
-   */
-  Localization(std::string vocabularyFile, std::string configFile);
-#endif
   Localization();
 
   /**
@@ -64,14 +47,6 @@ class Localization {
   std::array<double, 2> driving_direction{};
 
  private:
-#ifdef USE_ORB_SLAM
-  /* ORB SLAM config files */
-  std::string vocabularyFile;
-  std::string configFile;
-
-  /* ORB SLAM system */
-  ORB_SLAM3::System *slam;
-#endif
 
   double accum_angle;
   long accum_time;
