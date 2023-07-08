@@ -7,39 +7,51 @@ workflow:
     - if: $CI_COMMIT_REF_NAME == "schedule"
       when: always # run when scheduled
 
-stages:
-  - prepare
-  - main
-
 variables:
-  DOCKER_IMAGE_NAME: git.tu-berlin.de:5000/mpsees-23-driving-2/mpsees-23-nxtosek-driving/ci:latest
+  DOCKER_IMAGE_NAME: git.tu-berlin.de:5000/mpsees-23-driving-2/mpsees-23-nxtosek-driving/ci:$CI_COMMIT_SHORT_SHA
 
 build:
-  stage: prepare
   script:
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes > /dev/null
     - docker build --platform linux/arm64 -t $DOCKER_IMAGE_NAME .
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY > /dev/null
-    - docker push $CI_REGISTRY_IMAGE > /dev/null
+    - docker push $DOCKER_IMAGE_NAME > /dev/null
   tags:
     - docker
 
 test:
-  stage: main
+  needs:
+    - build
   image: $DOCKER_IMAGE_NAME
   script:
-    - echo "This is where I'd put my tests if I had them"
+    - export GTEST_OUTPUT=xml:rspec.xml
+    - /app/build/bin/ci_test
   tags:
     - docker
+# Report unit test results in CI
+  artifacts:
+    when: always
+    paths:
+      - rspec.xml
+    reports:
+      junit: rspec.xml
 
 export:
-  stage: main
+  needs:
+    - test
   script:
+    - docker rm export_container || echo Already removed
     - docker create --platform linux/arm64 --name export_container $DOCKER_IMAGE_NAME
-    - docker cp export_container:/app/build/bin/buildhat++ ./buildhat++
+    - docker cp export_container:/app/build/bin/geordi ./geordi
+#    - docker cp export_container:/app/build/bin/geordi_test ./geordi_test
+    - docker cp export_container:/app/build/lib/libgeordi_lib.a ./libgeordi_lib.a
+    - docker cp export_container:/app/build/lib/libgeordi_test_lib.a ./libgeordi_test_lib.a
     - docker rm export_container
   artifacts:
     paths:
-      - buildhat++
+      - geordi
+#      - geordi_test
+      - libgeordi_lib.a
+      - libgeordi_test_lib.a
   tags:
     - docker

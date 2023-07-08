@@ -10,58 +10,39 @@
 #include <libserial/SerialPort.h>
 #include <libserial/SerialStream.h>
 
+#include "communication/serial/ISerialWrite.hpp"
+#include "communication/serial/ISerialRead.hpp"
+#include "communication/serial/ISerialReadWrite.hpp"
+
 using namespace LibSerial;
 
 namespace fs = std::experimental::filesystem;
-
 
 /**
  * @brief abstraction over the serial communication interface
  * providing both read and write, as well as an internal firmware flashing service
  * 
  */
-class BuildHat {
- public:
+class BuildHat : public ISerialReadWrite {
+ GEORDI_PUBLIC:
   /**
    * @brief Get the Instance object
    * 
    * @return BuildHat& 
    */
-  static BuildHat &getInstance();
+  static ISerialReadWrite &getInstance();
 
   // Delete the copy constructor and copy assignment operator
   BuildHat(BuildHat const &) = delete;
   BuildHat &operator=(BuildHat const &) = delete;
 
-  /**
-   * @brief whether the hat is ready for communication
-   * 
-   * @return true when ready, false else
-   */
-  [[nodiscard]] bool isReady() const;
+  void serial_write_line(std::string const &data = "", bool log = true, std::string const &alt = "") override;
+  std::string serial_read_line(bool log = false, std::string const &alt = "") override;
 
-  /**
-   * @brief Writes a single line to serial and flushes the write buffer
-   * 
-   * @param data data to write, will be appended with \r to indicate end of line
-   * @param log whether to log the write
-   * @param alt if non-empty, log this instead of the data
-   */
-  void serial_write_line(std::string const &data = "", bool log = true, std::string const &alt = "");
-
-  /**
-   * @brief Reads a single line from serial
-   * 
-   * @param log whether to log what was read
-   * @param alt if non-empty, log this instead of the read line
-   * @return std::string the line read
-   */
-  std::string serial_read_line(bool log = false, std::string const &alt = "");
-
- private:
+ GEORDI_PRIVATE:
   /**
    * @brief Construct a new Build Hat object
-   * This includes checking the build hat state and, if neccessary,
+   * This includes checking the build hat state and, if necessary,
    * flashing the firmware
    * 
    */
@@ -71,10 +52,10 @@ class BuildHat {
    * @brief Destroy the Build Hat object
    * 
    */
-  ~BuildHat();
+  ~BuildHat() override;
 
   /**
-   * @brief Hatstate, in terms of software flashed
+   * @brief HatState, in terms of software flashed
    * 
    */
   enum class HatState : u_int8_t {

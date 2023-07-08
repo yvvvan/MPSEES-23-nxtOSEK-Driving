@@ -6,7 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 include(GNUInstallDirs)
 
 if(NOT CMAKE_BUILD_TYPE)
+<<<<<<< HEAD
   set(CMAKE_BUILD_TYPE "Debug")
+=======
+   set(CMAKE_BUILD_TYPE "Debug")
+>>>>>>> 2ecef7725ec08a3e31b2f30f9a8d0a999447a8a7
 endif()
 
 # Set output directories
@@ -42,23 +46,25 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
 
 include_directories(/usr/local/include/)
 
+# Remote control library
+include_directories(${CMAKE_SOURCE_DIR}/lib/remote_control)
+file(GLOB_RECURSE REMOTE_CONTROL_SOURCES "lib/remote_control/*.cpp")
+file(GLOB_RECURSE REMOTE_CONTROL_HEADERS "lib/remote_control/*.hpp")
+
+include_directories(/usr/local/include/)
+
 # Source files, recursively
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Header files, recursively
 file(GLOB_RECURSE HEADERS "src/*.hpp" "include/*.hpp")
 
-# Remote control library
-include_directories(${CMAKE_SOURCE_DIR}/lib/remote_control)
-file(GLOB_RECURSE REMOTE_CONTROL_SOURCES "lib/remote_control/*.cpp")
-file(GLOB_RECURSE REMOTE_CONTROL_HEADERS "lib/remote_control/*.hpp")
-
 # ------------------------------------------------------- #
 # ------------------- Local libraries ------------------- #
 
 # Add library targets
-add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_HEADERS})
-add_library(${PROJECT_NAME}_test_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_HEADERS})
+add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
+add_library(${PROJECT_NAME}_test_lib ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
 
 # Add compile definitions to the test library
 target_compile_definitions(${PROJECT_NAME}_test_lib PUBLIC TEST_BUILD)
