@@ -43,7 +43,7 @@ void RobotController::processColorSensor() {
         // std::cout << "I see the color: " << range.name << std::endl;
 
         // check whether the car is on the target color, if any
-        auto target_color = blackBoard.target_color.get();
+        auto target_color = blackBoard.target_color_name.get();
         blackBoard.on_target_color.set(target_color &&
                                        range == target_color.value());
         break;
@@ -78,21 +78,23 @@ double RobotController::getProcessedLaneAngle() {
 
 void RobotController::execute() {
   // only do anything at all when the build hat is ready
-  if (!blackBoard.buildHatReady.get() || !blackBoard.lane_detection_ready.get() || !blackBoard.color_sensor_ready.get()) {
+  if (!blackBoard.buildHatReady.get() ||
+      !blackBoard.lane_detection_ready.get() ||
+      !blackBoard.color_sensor_ready.get()) {
     return;
   }
 
   // TODO: remove for actual code
-  {
-    // take lap time
-    lap = std::chrono::system_clock::now();
-
-    // check whether ten seconds have elapsed
-    if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 60) {
-      // initiate termination of the program
-      blackBoard.running = false;
-      return;
-    }
+  // take lap time
+  lap = std::chrono::system_clock::now();
+  long time_total =
+      std::chrono::duration_cast<std::chrono::milliseconds>(lap - start)
+          .count();
+  // check whether ten seconds have elapsed
+  if (time_total > 10000) {
+    // initiate termination of the program
+    blackBoard.running = false;
+    return;
   }
 
   // process the color sensor
@@ -108,6 +110,7 @@ void RobotController::execute() {
     not_intersection_counter = 0;
     if (intersection_counter > min_intersection_counter / 2) {
       drive.set_speed(CAR_MIN_SPEED);
+      blackBoard.intersection_handled.set(false);
     }
 
     if (intersection_counter > min_intersection_counter) {
@@ -115,7 +118,8 @@ void RobotController::execute() {
     }
   } else {
     not_intersection_counter++;
-    if (intersection_counter <= min_intersection_counter || yeaCommaProbablyAnIntersection) {
+    if (intersection_counter <= min_intersection_counter ||
+        yeaCommaProbablyAnIntersection) {
       intersection_counter = 0;
     }
   }
@@ -126,7 +130,16 @@ void RobotController::execute() {
       intersection_counter = 0;
       not_intersection_counter = 0;
       drive.set_speed(CAR_SPEED);
-      drive.turn_left();
+      direction_t direction = blackBoard.direction.get();
+      if (direction == direction_t::LEFT) {
+        drive.turn_left();
+      } else if (direction == direction_t::RIGHT) {
+        drive.turn_right();
+      }
+      std::cout << "Intersection detected "
+                << "Direction: " << direction << std::endl;
+
+      blackBoard.intersection_handled.set(true);
       return;
     }
   }

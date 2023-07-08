@@ -1,17 +1,16 @@
 #ifndef BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 #define BUILDHAT_SRC_BLACKBOARD_BLACKBOARD_HPP_
 
-
 #include <array>
 #include <mutex>
-#include <vector>
-#include <optional>
 #include <opencv2/opencv.hpp>
+#include <optional>
+#include <vector>
 
 #include "SmartMember.hpp"
 #include "globals.hpp"
-#include "modules/slam/coordinates.hpp"
 #include "modules/color_sensor/ColorTypes.hpp"
+#include "modules/slam/coordinates.hpp"
 
 /**
  * @brief common, synchronised data exchange
@@ -44,31 +43,33 @@ class BlackBoard {
   SmartMember<bool> has_turned;  // flag indicating that the car has turned
   SmartMember<bool> intersection_handled;  // flag indicating that the
                                            // intersection has been handled
-  SmartMember<direction_t>
-      turn_direction;  // direction to turn to (left, right, straight)
 
   // Color sensor
-  SmartMember<bool> color_sensor_ready{false};             // flag indicating that the color sensor is ready
+  SmartMember<bool> color_sensor_ready{
+      false};  // flag indicating that the color sensor is ready
 
-  SmartMember<std::vector<Color::ColorRange> > colors;              // vector of colors
-  SmartMember<std::optional<Color::ColorRange> > current_color;     // current color
-  SmartMember<std::optional<std::string> > target_color_name;       // target color
-  SmartMember<bool> on_target_color{false};                           // flag indicating that the car is on the target color
+  SmartMember<std::vector<Color::ColorRange>> colors;  // vector of colors
+  SmartMember<std::optional<Color::ColorRange>> current_color;  // current color
+  SmartMember<std::optional<std::string>> target_color_name;    // target color
+  SmartMember<bool> on_target_color{
+      false};  // flag indicating that the car is on the target color
 
   // Lane detection
   SmartMember<bool> lane_detection_ready{
       false};  // flag indicating that the lane detection is ready
 
-  SmartMember<int> lane_count;                                      // count the lanes
-  SmartMember<bool> has_left_lane;                                  // check if left lane exists
-  SmartMember<bool> has_right_lane;                                 // check if right lane exists
-  SmartMember<bool> is_dead_end;                                    // check if dead end exists
-  SmartMember<bool> is_intersection;                                // check if intersection exists
-  SmartMember<bool> is_lower_intersection;                          // check if intersection exists in the lower half
-  SmartMember<double> offset_middle_line;                           // current offset to middle line
-  SmartMember<double> distance_intersection;                        // distance to intersection
-  SmartMember<std::array<bool, 3>> exits_intersection;              // left, middle, right
-  SmartMember<std::array<double, 3>> exits_distance_intersection;   // left, middle, right distance
+  SmartMember<int> lane_count;        // count the lanes
+  SmartMember<bool> has_left_lane;    // check if left lane exists
+  SmartMember<bool> has_right_lane;   // check if right lane exists
+  SmartMember<bool> is_dead_end;      // check if dead end exists
+  SmartMember<bool> is_intersection;  // check if intersection exists
+  SmartMember<bool>
+      is_lower_intersection;  // check if intersection exists in the lower half
+  SmartMember<double> offset_middle_line;     // current offset to middle line
+  SmartMember<double> distance_intersection;  // distance to intersection
+  SmartMember<std::array<bool, 3>> exits_intersection;  // left, middle, right
+  SmartMember<std::array<double, 3>>
+      exits_distance_intersection;  // left, middle, right distance
   // END Lane detection
 
   /* Camera Frame */
@@ -89,7 +90,8 @@ class BlackBoard {
   SmartMember<Coordinates>
       coordinates;  // current coordinates returned by localization
   SmartMember<std::array<Coordinates, 4>>
-      stations;  // coordinates of the 4 stations
+      stations;                    // coordinates of the 4 stations
+  SmartMember<station_t> station;  // the current station
 
   SmartMember<int> last_intersection;  // last intersection
   SmartMember<int>

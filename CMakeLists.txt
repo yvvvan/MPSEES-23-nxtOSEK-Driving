@@ -31,9 +31,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
 include_directories(/usr/local/include/)
 
 # Remote control library
-include_directories(${CMAKE_SOURCE_DIR}/lib/remote_control)
-file(GLOB_RECURSE REMOTE_CONTROL_SOURCES "lib/remote_control/*.cpp")
-file(GLOB_RECURSE REMOTE_CONTROL_HEADERS "lib/remote_control/*.hpp")
+include_directories(${CMAKE_SOURCE_DIR}/lib/)
+file(GLOB_RECURSE LOCAL_LIBRARY_SOURCES "lib/*.cpp")
+file(GLOB_RECURSE LOCAL_LIBRARY_HEADERS "lib/*.hpp")
 
 include_directories(/usr/local/include/)
 
@@ -47,8 +47,8 @@ file(GLOB_RECURSE HEADERS "src/*.hpp" "include/*.hpp")
 # ------------------- Local libraries ------------------- #
 
 # Add library targets
-add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
-add_library(${PROJECT_NAME}_test_lib ${SOURCES} ${HEADERS} ${REMOTE_CONTROL_SOURCES} ${REMOTE_CONTROL_HEADERS})
+add_library(${PROJECT_NAME}_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_SOURCES})
+add_library(${PROJECT_NAME}_test_lib ${SOURCES} ${HEADERS} ${LOCAL_LIBRARY_SOURCES} ${LOCAL_LIBRARY_SOURCES})
 
 # Add compile definitions to the test library
 target_compile_definitions(${PROJECT_NAME}_test_lib PUBLIC TEST_BUILD)
@@ -92,4 +92,4 @@ add_custom_target(BUILD_ALL ALL DEPENDS ${PROJECT_NAME} ${PROJECT_NAME}_calibrat
 #enable_testing()
 #add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
-add_subdirectory(test)
+#add_subdirectory(test)

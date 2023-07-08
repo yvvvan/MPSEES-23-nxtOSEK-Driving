@@ -212,8 +212,9 @@ int Mapping::exec_thread() {
 
     // Intersection detection
     intersection_detected_last = intersection_detected;
-    intersection_detected = this->blackboard.intersection_detected.get();
-    std::array<bool, 3> exits_detected = this->blackboard.exits_detected.get();
+    intersection_detected = this->blackboard.is_intersection.get();
+    std::array<bool, 3> exits_detected =
+        this->blackboard.exits_intersection.get();
     exit_left_detected = exits_detected.at(0);
     exit_middle_detected = exits_detected.at(1);
     exit_right_detected = exits_detected.at(2);

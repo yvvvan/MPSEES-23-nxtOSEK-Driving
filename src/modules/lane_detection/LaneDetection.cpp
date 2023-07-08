@@ -173,169 +173,159 @@ void LaneDetection::check_intersection() {
     // calculate the x-coordinate of the center of the horizontal line
     double hx = (horizontalLine[0] + horizontalLine[2]) / 2;
 
-    // Loop through each horizontal line
-    for (const auto &horizontalLine : this->horizontalLines) {
-      // y = m * x + b for the horizontal line
-      double m_horizontal = (horizontalLine[1] - horizontalLine[3]) /
-                            (horizontalLine[0] - horizontalLine[2]);
-      double b_horizontal =
-          horizontalLine[1] - (m_horizontal * horizontalLine[0]);
-      // calculate the x-coordinate of the center of the horizontal line
-      double hx = (horizontalLine[0] + horizontalLine[2]) / 2;
+    // checking for intersections on the left side
+    if (horizontalLine[0] < IMAGE_MIDDLE_X &&
+        horizontalLine[2] < IMAGE_MIDDLE_X) {
+      // Calculate the intersection point with the left vertical line
+      double mLeft =
+          (this->leftLane[1] - this->leftLane[3]) /
+          (this->leftLane[0] - this->leftLane[2]);  // m = (y2-y1)/(x2-x1)
+      double bLeft =
+          this->leftLane[1] - (mLeft * this->leftLane[0]);  // b = y1 - (m * x1)
+      double intersectionX = -(b_horizontal - bLeft) / (m_horizontal - mLeft);
 
-      // checking for intersections on the left side
-      if (horizontalLine[0] < IMAGE_MIDDLE_X &&
-          horizontalLine[2] < IMAGE_MIDDLE_X) {
-        // Calculate the intersection point with the left vertical line
-        double mLeft =
-            (this->leftLane[1] - this->leftLane[3]) /
-            (this->leftLane[0] - this->leftLane[2]);  // m = (y2-y1)/(x2-x1)
-        double bLeft = this->leftLane[1] -
-                       (mLeft * this->leftLane[0]);  // b = y1 - (m * x1)
-        double intersectionX = -(b_horizontal - bLeft) / (m_horizontal - mLeft);
+      double intersectionY =
+          (mLeft * intersectionX) +
+          bLeft;  // just for visualization, maybe needed if returning a point
 
-        double intersectionY =
-            (mLeft * intersectionX) +
-            bLeft;  // just for visualization, maybe needed if returning a point
+      // Check if the intersection point is within the left lane segment
+      if (intersectionX < IMAGE_MIDDLE_X && 0 <= intersectionX) {
+        cv::circle(this->original_frame,
+                   cv::Point2d(intersectionX, intersectionY), 3,
+                   cv::Scalar(255, 0, 0),
+                   3);  // just for testing
 
-        // Check if the intersection point is within the left lane segment
-        if (intersectionX < IMAGE_MIDDLE_X && 0 <= intersectionX) {
-          cv::circle(this->original_frame,
-                     cv::Point2d(intersectionX, intersectionY), 3,
-                     cv::Scalar(255, 0, 0),
-                     3);  // just for testing
+        // there is an intersection on the left side
+        temp_intersections[0] = true;
 
-          // there is an intersection on the left side
-          temp_intersections[0] = true;
+        // check if the intersection is the lower one
+        if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
+            (this->leftLane[1] + this->leftLane[3]) / 2) {
+          temp_lower_intersections = true;
+        }
 
-          // check if the intersection is the lower one
-          if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
-              (this->leftLane[1] + this->leftLane[3]) / 2) {
-            temp_lower_intersections = true;
-          }
+        if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
+            this->rightLane == cv::Vec4d()) {
+          // there is an intersection on the left but no right line -> not able
+          // to turn left or go ahead, just right is possible
+          temp_intersections[0] = false;
+          temp_intersections[2] = true;
+        } else if (hx > max_left && hx < max_right &&
+                   this->leftLane != cv::Vec4d() &&
+                   this->rightLane != cv::Vec4d()) {
+          // the line is in the center of the image and there is a left and a
+          // right line -> not able to turn right, left or go ahead
+          temp_intersections[0] = false;
+          this->is_dead_end.push_front(true);
+          temp_dead_end = true;
+        } else if (horizontalLine[1] > this->leftLane[1] &&
+                   horizontalLine[3] > this->leftLane[3]) {
+          // the line is above the right lane, so it must be possible to go
+          // straight ahead
+          temp_intersections[1] = true;
         }
       }
+    }
 
-      if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
-          this->rightLane == cv::Vec4d()) {
-        // there is an intersection on the left but no right line -> not able to
-        // turn left or go ahead, just right is possible
-        temp_intersections[0] = false;
+    // checking for intersections on the right side
+    if (horizontalLine[0] > IMAGE_MIDDLE_X &&
+        horizontalLine[2] > IMAGE_MIDDLE_X) {
+      // Calculate the intersection point with the right vertical line
+      double mRight = (this->rightLane[1] - this->rightLane[3]) /
+                      (this->rightLane[0] - this->rightLane[2]);
+      double bRight = this->rightLane[1] - (mRight * this->rightLane[0]);
+      double intersectionX = -(b_horizontal - bRight) / (m_horizontal - mRight);
+
+      double intersectionY =
+          (mRight * intersectionX) +
+          bRight;  // just for visualization, maybe needed if returning a point
+
+      // Check if the intersection point is within the right lane segment
+      if (intersectionX > IMAGE_MIDDLE_X &&
+          intersectionX <= 2 * IMAGE_MIDDLE_X) {
+        cv::circle(this->original_frame,
+                   cv::Point2d(intersectionX, intersectionY), 3,
+                   cv::Scalar(255, 0, 0),
+                   3);  // just for testing
+
+        // there is an intersection on the right side
         temp_intersections[2] = true;
-      } else if (hx > max_left && hx < max_right &&
-                 this->leftLane != cv::Vec4d() &&
-                 this->rightLane != cv::Vec4d()) {
-        // the line is in the center of the image and there is a left and a
-        // right line -> not able to turn right, left or go ahead
-        temp_intersections[0] = false;
-        this->is_dead_end.push_front(true);
-        temp_dead_end = true;
-      } else if (horizontalLine[1] > this->leftLane[1] &&
-                 horizontalLine[3] > this->leftLane[3]) {
-        // the line is above the right lane, so it must be possible to go
-        // straight ahead
-        temp_intersections[1] = true;
+
+        // check if the intersection is the lower one
+        if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
+            (this->rightLane[1] + this->rightLane[3]) / 2) {
+          temp_lower_intersections = true;
+        }
+
+        if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
+            this->leftLane == cv::Vec4d()) {
+          // there is an intersection on the right but no left line -> not able
+          // to turn right or go ahead, just left is possible
+          temp_intersections[0] = true;
+          temp_intersections[2] = false;
+        } else if (hx > max_left && hx < max_right &&
+                   this->leftLane != cv::Vec4d() &&
+                   this->rightLane != cv::Vec4d()) {
+          // the line is in the center of the image and there is a left and a
+          // right line -> not able to turn right, left or go ahead
+          temp_intersections[0] =
+              false;  // not able to turn left, even if it was detected earlier
+          temp_intersections[2] = false;
+          this->is_dead_end.push_front(true);
+          temp_dead_end = true;
+        } else if (horizontalLine[1] > this->rightLane[1] &&
+                   horizontalLine[3] > this->rightLane[3]) {
+          // the line is above the right lane, so it must be possible to go
+          // straight ahead
+          temp_intersections[1] = true;
+        }
       }
     }
   }
-}
 
-// checking for intersections on the right side
-if (horizontalLine[0] > IMAGE_MIDDLE_X && horizontalLine[2] > IMAGE_MIDDLE_X) {
-  // Calculate the intersection point with the right vertical line
-  double mRight = (this->rightLane[1] - this->rightLane[3]) /
-                  (this->rightLane[0] - this->rightLane[2]);
-  double bRight = this->rightLane[1] - (mRight * this->rightLane[0]);
-  double intersectionX = -(b_horizontal - bRight) / (m_horizontal - mRight);
-
-  double intersectionY =
-      (mRight * intersectionX) +
-      bRight;  // just for visualization, maybe needed if returning a point
-
-  // Check if the intersection point is within the right lane segment
-  if (intersectionX > IMAGE_MIDDLE_X && intersectionX <= 2 * IMAGE_MIDDLE_X) {
-    cv::circle(this->original_frame, cv::Point2d(intersectionX, intersectionY),
-               3, cv::Scalar(255, 0, 0),
-               3);  // just for testing
-
-    // there is an intersection on the right side
-    temp_intersections[2] = true;
-
-    // check if the intersection is the lower one
-    if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
-        (this->rightLane[1] + this->rightLane[3]) / 2) {
-      temp_lower_intersections = true;
-    }
-
-    if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
-        this->leftLane == cv::Vec4d()) {
-      // there is an intersection on the right but no left line -> not able to
-      // turn right or go ahead, just left is possible
-      temp_intersections[0] = true;
-      temp_intersections[2] = false;
-    } else if (hx > max_left && hx < max_right &&
-               this->leftLane != cv::Vec4d() &&
-               this->rightLane != cv::Vec4d()) {
-      // the line is in the center of the image and there is a left and a right
-      // line -> not able to turn right, left or go ahead
-      temp_intersections[0] =
-          false;  // not able to turn left, even if it was detected earlier
-      temp_intersections[2] = false;
-      this->is_dead_end.push_front(true);
-      temp_dead_end = true;
-    } else if (horizontalLine[1] > this->rightLane[1] &&
-               horizontalLine[3] > this->rightLane[3]) {
-      // the line is above the right lane, so it must be possible to go straight
-      // ahead
-      temp_intersections[1] = true;
-    }
+  // if dead end is not detected, push false
+  if (!temp_dead_end) {
+    this->is_dead_end.push_front(false);
   }
-}
-}
 
-// if dead end is not detected, push false
-if (!temp_dead_end) {
-  this->is_dead_end.push_front(false);
-}
+  if (this->is_dead_end.size() == INTERSECTION_QUEUE_SIZE) {
+    this->is_dead_end.pop_back();
+  }
 
-if (this->is_dead_end.size() == INTERSECTION_QUEUE_SIZE) {
-  this->is_dead_end.pop_back();
-}
+  // push to queue, pop if queue is full
+  if (this->exits_intersection.size() == INTERSECTION_QUEUE_SIZE) {
+    this->exits_intersection.pop_back();
+  }
 
-// push to queue, pop if queue is full
-if (this->exits_intersection.size() == INTERSECTION_QUEUE_SIZE) {
-  this->exits_intersection.pop_back();
-}
+  this->exits_intersection.push_front(temp_intersections);
 
-this->exits_intersection.push_front(temp_intersections);
+  // if is_intersection queue is full, pop the oldest element
+  if (this->is_intersection.size() == INTERSECTION_QUEUE_SIZE) {
+    this->is_intersection.pop_back();
+  }
 
-// if is_intersection queue is full, pop the oldest element
-if (this->is_intersection.size() == INTERSECTION_QUEUE_SIZE) {
-  this->is_intersection.pop_back();
-}
+  // check if an intersection is visible and push to queue
+  if (temp_intersections[0] || temp_intersections[1] || temp_intersections[2]) {
+    this->is_intersection.push_front(true);
+  } else {
+    this->is_intersection.push_front(false);
+  }
 
-// check if an intersection is visible and push to queue
-if (temp_intersections[0] || temp_intersections[1] || temp_intersections[2]) {
-  this->is_intersection.push_front(true);
-} else {
-  this->is_intersection.push_front(false);
-}
+  // if lower_intersections is full, pop the oldest element
+  if (this->lower_intersections.size() == INTERSECTION_QUEUE_SIZE) {
+    this->lower_intersections.pop_back();
+  }
 
-// if lower_intersections is full, pop the oldest element
-if (this->lower_intersections.size() == INTERSECTION_QUEUE_SIZE) {
-  this->lower_intersections.pop_back();
-}
+  // if lower intersection is detected, push true
+  if (temp_lower_intersections) {
+    this->lower_intersections.push_front(true);
+  } else {
+    this->lower_intersections.push_front(false);
+  }
 
-// if lower intersection is detected, push true
-if (temp_lower_intersections) {
-  this->lower_intersections.push_front(true);
-} else {
-  this->lower_intersections.push_front(false);
-}
-
-// - exits_intersection[0] = left
-// - exits_intersection[1] = straight
-// - exits_intersection[2] = right
+  // - exits_intersection[0] = left
+  // - exits_intersection[1] = straight
+  // - exits_intersection[2] = right
 }
 
 /**
@@ -346,11 +336,6 @@ if (temp_lower_intersections) {
  * @return std::vector<cv::Vec4d> the center line
  */
 void LaneDetection::calculate_center() {
-  // Limit the queue size to 4 elements
-  if (this->offset_queue.size() >= QUEUE_SIZE) {
-    this->offset_queue.pop_back();
-  }
-
   // Limit the queue size to 4 elements
   if (this->offset_queue.size() >= QUEUE_SIZE) {
     this->offset_queue.pop_back();
@@ -521,19 +506,20 @@ void LaneDetection::return_function() {
   std::array<bool, 3> debug_result_exits_intersection =
       find_majority_exits_intersection();
 
-  std::cout
-      << "LaneDetection: "
-      //<< "angle: " << angle
-      << ",\tisIntersection: "
-      << find_majority_bool_deque(this->is_intersection)
-      //<< ", exits_intersection: " << debug_result_exits_intersection[0] <<
-      //debug_result_exits_intersection[1] << debug_result_exits_intersection[2]
-      //<< ", is_dead_end: " << find_majority_bool_deque(this->is_dead_end)
-      << "\tlowerIntersection: "
-      << find_majority_bool_deque(this->lower_intersections)
-      //<< ", hasLeftLane: " << this->hasLeftLane
-      //<< ", hasRightLane: " << this->hasRightLane
-      << std::endl;
+  //  std::cout
+  //      << "LaneDetection: "
+  //      //<< "angle: " << angle
+  //      << ",\tisIntersection: "
+  //      << find_majority_bool_deque(this->is_intersection)
+  //      //<< ", exits_intersection: " << debug_result_exits_intersection[0] <<
+  //      //debug_result_exits_intersection[1] <<
+  //      debug_result_exits_intersection[2]
+  //      //<< ", is_dead_end: " << find_majority_bool_deque(this->is_dead_end)
+  //      << "\tlowerIntersection: "
+  //      << find_majority_bool_deque(this->lower_intersections)
+  //      //<< ", hasLeftLane: " << this->hasLeftLane
+  //      //<< ", hasRightLane: " << this->hasRightLane
+  //      << std::endl;
 
   int lane_count = 0;
   if (this->hasLeftLane) {
@@ -680,26 +666,18 @@ void LaneDetection::main_loop_camera() {
                                 double fps = 20.0;  // Frames per second
                                 cv::Size frameSize(width, height);  // Frame size
                           
-                                // process image frame and display it
-                                process_image_frame();
-                          
-                                /*/
-      / update fps counter fps_counter++;
-  end = std::chrono::high_resolution_clock::now();
-  elapsed = end - start;
-  if (elapsed.count() >= 1) {
-    std::cout << "FPS: " << fps_counter << std::endl;
-    fps_counter = 0;
-    start = std::chrono::high_resolution_clock::now();
-  }
-  * /
+                                writer.open(outputFilename, codec, fps, frameSize);
+                                if (!writer.isOpened()) {
+                                    std::cout << "Could not open the output video file for writing." <<
+                               std::endl;
+                                }*/
 
-      // creating an opencv window to display the processed frames
-      /*cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
-       */
+  // creating an opencv window to display the processed frames
+  /*cv::namedWindow("Processed Frame", cv::WINDOW_NORMAL);
+   */
 
-      // fps counter
-      int fps_counter = 0;
+  // fps counter
+  int fps_counter = 0;
   auto start = std::chrono::high_resolution_clock::now();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed{};
@@ -847,10 +825,6 @@ void LaneDetection::run(const char *path) {
  * @return
  */
 double LaneDetection::calculate_center_offset_average() {
-  if (this->offset_queue.size() < QUEUE_SIZE) {
-    return 0;
-  }
-
   if (this->offset_queue.size() < QUEUE_SIZE) {
     return 0;
   }

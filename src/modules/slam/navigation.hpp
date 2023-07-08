@@ -4,8 +4,8 @@
 #include "communication/internal/BlackBoard.hpp"
 #include "localization.hpp"
 
-#define max 12
-#define INFINITY 9999
+#define MAX_SIZE 12
+#define INF 9999
 
 class Navigation {
  public:
@@ -40,7 +40,7 @@ class Navigation {
   std::array<std::array<int, 12>, 2>
       path_found;  // path_found[0] = path, path_found[1] = exits
 
-  int G[max][max] = {
+  int G[MAX_SIZE][MAX_SIZE] = {
       // 0   1     2     3     4     5     6     7     8     9    10    11
       /*0*/ {0, 155, -1, 195, -1, -1, -1, -1, 170, -1, -1, -1},
       /*1*/ {155, 0, 170, -1, -1, -1, -1, -1, -1, 80, -1, -1},
@@ -56,12 +56,12 @@ class Navigation {
       /*11*/ {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
   /* treat landmarks as intersection*/
-  int C[max][4] = {
+  int C[MAX_SIZE][4] = {
       // S  W   N    E
       /*0*/ {3, 8, -1, 1},
       /*1*/ {9, 0, -1, 2},
       /*2*/ {6, 1, -1, -1},
-      /*3*/ {7, 0, 8, 4},
+      /*3*/ {7, 8, 0, 4},
       /*4*/ {10, 3, -1, 5},
       /*5*/ {7, 4, -1, 6},
       /*6*/ {-1, 5, 2, -1},
