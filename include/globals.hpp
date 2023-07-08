@@ -11,7 +11,7 @@
 #ifdef TEST_BUILD
 #define GEORDI_PUBLIC public
 #define GEORDI_PROTECTED protected
-#define GEORDI_PRIVATE protected
+#define GEORDI_PRIVATE public
 #else
 #define GEORDI_PUBLIC public
 #define GEORDI_PROTECTED protected
@@ -51,6 +51,7 @@ constexpr int COLOR_MIN_SAT = 7;
 constexpr int COLOR_MIN_VAL = 7;
 
 /* drive parameters */
+<<<<<<< HEAD
 constexpr double CAR_SPEED = 2.0/3.0;
 constexpr double CAR_MIN_SPEED = 0.571;
 
@@ -61,6 +62,10 @@ constexpr int PORT_RIGHT_MOTOR = 0;
 constexpr bool INVERT_RIGHT_MOTOR = true;
 
 constexpr double FORWARD_ANGLE = 120; // everything above this angle is considered in place turning
+=======
+constexpr double FORWARD_ANGLE =
+    120;  // everything above this angle is considered in place turning
+>>>>>>> feature/10-mapping-map-environment
 constexpr double FORWARD_SCALE_FACTOR = (-1.0 / (FORWARD_ANGLE / 2.0));
 
 /* PD controller parameters */
@@ -68,6 +73,7 @@ constexpr double KP = 0.25;
 constexpr double KD = 0.25;
 
 /* camera parameters */
+<<<<<<< HEAD
 constexpr int FPS          = 30;
 constexpr int IMAGE_WIDTH  = 640;
 constexpr int IMAGE_HEIGHT = 480;
@@ -79,16 +85,33 @@ constexpr double IMAGE_MIDDLE_X           = IMAGE_WIDTH / 2.0;
 constexpr double IMAGE_MIDDLE_Y           = IMAGE_HEIGHT / 2.0;
 constexpr double MISSING_LANE_MULTIPLIER  = 2.0;
 constexpr double LANE_DETECTION_MIN_SLOPE = 0.5;
+=======
+constexpr int FPS = 20;
+constexpr int IMAGE_WIDTH = 640;
+constexpr int IMAGE_HEIGHT = 480;
+
+/* lane detection */
+constexpr int QUEUE_SIZE = FPS / 5;
+constexpr double IMAGE_MIDDLE = IMAGE_WIDTH / 2.0;
+>>>>>>> feature/10-mapping-map-environment
 
 // canny
 constexpr int CANNY_THRESHOLD_1 = 50;
 constexpr int CANNY_THRESHOLD_2 = 150;
 
 // hough
-constexpr int HOUGH_RHO          = 1;
-constexpr int HOUGH_THRESHOLD    = 15;
+constexpr int HOUGH_RHO = 1;
+constexpr int HOUGH_THRESHOLD = 15;
 constexpr int HOUGH_MIN_LINE_LEN = 10;
 constexpr int HOUGH_MAX_LINE_GAP = 20;
+<<<<<<< HEAD
 constexpr double HOUGH_THETA     = M_PI / 180.0;
+=======
+constexpr double HOUGH_THETA = 0.01745329251;  // pi / 180
 
-#endif //BUILDHAT_GLOBALS_HPP
+// lane detection
+constexpr double MISSING_LANE_MULTIPLIER = 2.0;
+constexpr double LANE_DETECTION_MIN_SLOPE = 0.5;
+>>>>>>> feature/10-mapping-map-environment
+
+#endif  // BUILDHAT_GLOBALS_HPP
