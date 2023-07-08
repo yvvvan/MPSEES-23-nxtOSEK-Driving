@@ -1,5 +1,10 @@
-
 #include "navigation.hpp"
+
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+#include "coordinates.hpp"
 
 using namespace std;
 
@@ -77,14 +82,14 @@ array<array<int, max>, 2> dijkstra(int G[max][max], int C[max][4],
     cout << endl;
   }
 
-  int path_0[max] = {-1};
-  int exits_0[max] = {-1};
+  array<int, max> path_0 = {-1};
+  array<int, max> exits_0 = {-1};
   array<int, max> path = {-1};
   array<int, max> exits = {-1};
-  fill_n(path, max, -1);
-  fill_n(exits, max, -1);
-  fill_n(path_0, max, -1);
-  fill_n(exits_0, max, -1);
+  fill(begin(path), end(path), -1);
+  fill(begin(exits), end(exits), -1);
+  fill(begin(path_0), end(path_0), -1);
+  fill(begin(exits_0), end(exits_0), -1);
 
   int current_intersection = -1;
   int exit_intersection = -1;
@@ -104,8 +109,8 @@ array<array<int, max>, 2> dijkstra(int G[max][max], int C[max][4],
     } while (current_intersection != startnode);
   }
 
-  copy(path_0 + k, path_0 + max, path);
-  copy(exits_0 + k, exits_0 + max, exits);
+  copy(begin(path_0) + k, end(path_0), begin(path));
+  copy(begin(exits_0) + k, end(exits_0), begin(exits));
 
   array<array<int, max>, 2> path_found = {path, exits};
 
@@ -123,19 +128,68 @@ array<array<int, max>, 2> dijkstra(int G[max][max], int C[max][4],
   // cout << endl;
 }
 
-Navigation::Navigation() {
-  auto path_found = dijkstra(this->G, this->C, this->start, this->end);
-  this->blackboard.path_found.set(path_found);
-}
+Navigation::Navigation() {}
 
 Navigation::~Navigation() {
   // No operation
 }
 
 int Navigation::exec_thread() {
+  int intersection_count = 0;
+  int turn_direction = 0;
   while (this->blackboard.navigation_enabled.get()) {
-    int start = 0;
-    /* code */
+    start = this->blackboard.next_intersection.get();
+    int destination = this->blackboard.destination.get();
+
+    if (start == destination) {
+      this->blackboard.destination_reached.set(true);
+    }
+
+    // new destination
+    if (end != destination) {
+      end = destination;
+      path_found = dijkstra(this->G, this->C, this->start, this->end);
+      intersection_count = 0;
+    }
+    // driving to destination
+    else {
+      // update next_intersection and last_intersection
+      this->localization.track_map();
+
+      // check if we passed a intersection
+      if (path_found[0][intersection_count] ==
+          blackboard.last_intersection.get()) {
+        // get south/west/east/north direction
+        int next_exit = path_found[1][intersection_count];
+
+        intersection_count++;
+
+        // get south/west ... which Robot is driving now
+        int current_direction =
+            index(blackboard.last_intersection.get(), C[start]);
+        blackboard.turn_direction.set(
+            static_cast<direction_t>((next_exit - current_direction) % 4));
+      }
+
+      //      switch (current_direction) {
+      //        case SOUTH_EXIT:
+      //          turn_direction = current_direction;
+      //          break;
+      //        case WEST_EXIT:
+      //          turn_direction = (current_direction + 3) % 4;
+      //          break;
+      //        case NORTH_EXIT:
+      //          turn_direction = (current_direction + next_exit) % 4;
+      //          break;
+      //        case EAST_EXIT:
+      //          current_direction = 3;
+      //          break;
+      //        default:
+      //          cout << "Error: current_direction == -1" << endl;
+      //          blackboard.running.set(false);
+      //          return -1;
+      //      }
+    }
   }
 
   return 0;

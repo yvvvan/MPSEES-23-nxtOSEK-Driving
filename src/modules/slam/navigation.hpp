@@ -2,6 +2,7 @@
 #define NAVIGATION_HPP
 
 #include "communication/internal/BlackBoard.hpp"
+#include "localization.hpp"
 
 #define max 12
 #define INFINITY 9999
@@ -31,8 +32,13 @@ class Navigation {
  private:
   BlackBoard &blackboard = BlackBoard::getInstance();
 
+  Localization localization;
+
   int start = 2;
-  int end = 10;
+  int end = -1;
+
+  std::array<std::array<int, 12>, 2>
+      path_found;  // path_found[0] = path, path_found[1] = exits
 
   int G[max][max] = {
       // 0   1     2     3     4     5     6     7     8     9    10    11

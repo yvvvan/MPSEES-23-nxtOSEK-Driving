@@ -88,8 +88,9 @@ class BlackBoard {
 
   /* Path Finding*/
   SmartMember<bool> navigation_enabled;
-  SmartMember<std::array<std::array<int, 12>, 2>>
-      path_found;  // path_found[0] = path, path_found[1] = exits
+  SmartMember<int> destination;           // the station to go to
+  SmartMember<bool> destination_reached;  // flag indicating that the
+                                          // destination has been reached
 
   /******* end of member variables *******/
   // clang-format off
