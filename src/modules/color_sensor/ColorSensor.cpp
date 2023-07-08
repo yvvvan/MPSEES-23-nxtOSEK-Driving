@@ -4,6 +4,8 @@
 #include <thread>
 #include <array>
 
+#include "communication/internal/BlackBoard.hpp"
+
 ColorSensor &ColorSensor::getInstance() {
   static ColorSensor instance;
   return instance;
@@ -24,6 +26,7 @@ ColorSensor::ColorSensor(uint8_t port) {
   buildHat.serial_write_line("port " + std::to_string(this->port) + " ; set -1", false);
 
   this->available = true;
+  BlackBoard::getInstance().color_sensor_ready = true;
 }
 
 ColorSensor::~ColorSensor() {

@@ -52,6 +52,7 @@ constexpr int COLOR_MIN_VAL = 7;
 
 /* drive parameters */
 constexpr double CAR_SPEED = 2.0/3.0;
+constexpr double CAR_MIN_SPEED = 0.571;
 
 constexpr int PORT_LEFT_MOTOR = 3;
 constexpr bool INVERT_LEFT_MOTOR = false;

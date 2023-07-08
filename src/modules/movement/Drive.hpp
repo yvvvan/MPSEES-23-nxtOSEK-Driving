@@ -34,7 +34,7 @@ class Drive : public IMovement {
  GEORDI_PUBLIC:
   static IMovement &getInstance();
 
-  ~Drive() override = default;
+  ~Drive() override;
 
   /**
    * @brief set the drive speed, -1.0 to 1.0

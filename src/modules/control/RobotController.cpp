@@ -80,19 +80,16 @@ double RobotController::getProcessedLaneAngle() {
 }
 
 void RobotController::execute() {
-  static bool bhfbe = false;
-  static bool bhfbe_dead_end = false;
-
   // only do anything at all when the build hat is ready
-  if (!blackBoard.buildHatReady.get()) {
+  if (!blackBoard.buildHatReady.get() || !blackBoard.lane_detection_ready.get() || !blackBoard.color_sensor_ready.get()) {
     return;
   }
 
-  // take lap time
-  lap = std::chrono::system_clock::now();
-
   // TODO: remove for actual code
   {
+    // take lap time
+    lap = std::chrono::system_clock::now();
+
     // check whether ten seconds have elapsed
     if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 30) {
       // initiate termination of the program
@@ -104,122 +101,51 @@ void RobotController::execute() {
   // process the color sensor
   processColorSensor();
 
-  if (blackBoard.is_dead_end.get()) {
-    dead_end_counter++;
-    not_dead_end_counter = 0;
-  } else {
-    dead_end_counter = 0;
-    not_dead_end_counter++;
-    // reset car speed
-    drive.set_speed(CAR_SPEED);
-  }
+  /* ++++++++++++++ BEGIN check special conditions BEGIN ++++++++++++++ */
+
+  static int min_intersection_counter = 10;
+  static int min_not_intersection_counter = 10;
 
   if (blackBoard.is_intersection.get()) {
     intersection_counter++;
     not_intersection_counter = 0;
+    if (intersection_counter > min_intersection_counter / 2) {
+      drive.set_speed(CAR_MIN_SPEED);
+    }
+
+    if (intersection_counter > min_intersection_counter) {
+      yeaCommaProbablyAnIntersection = true;
+    }
   } else {
-    intersection_counter = 0;
     not_intersection_counter++;
-    // reset car speed
-    drive.set_speed(CAR_SPEED);
+    if (intersection_counter <= min_intersection_counter || yeaCommaProbablyAnIntersection) {
+      intersection_counter = 0;
+    }
   }
 
-  /* ++++++++++++++ BEGIN check special conditions BEGIN ++++++++++++++ */
+  if (yeaCommaProbablyAnIntersection) {
+    if (not_intersection_counter > min_not_intersection_counter) {
+      yeaCommaProbablyAnIntersection = false;
+      intersection_counter = 0;
+      not_intersection_counter = 0;
+      drive.set_speed(CAR_SPEED);
+      drive.turn_left();
+      return;
+    }
+  }
 
+  static bool on_color = false;
   // check whether the car is on the target color, if so, coast
   if (blackBoard.on_target_color.get()) {
-    std::cout << "I am on the target color!" << std::endl;
-    drive.coast(); // TODO: maybe break?
-    return;
-  }
-
-  if (intersection_counter > 2) {
-    drive.set_speed(0.5);
-  }
-
-  if (dead_end_counter > 2) {
-    drive.set_speed(0.5);
-  }
-
-  if (intersection_counter > 7) {
-    std::cout << "Probably an intersection" << std::endl;
-    yeaCommaProbablyAnIntersection = true;
-  }
-
-  if (dead_end_counter > 7) {
-    std::cout << "Probably a dead end" << std::endl;
-    yeaCommaProbablyADeadEnd = true;
-  }
-
-  if (bhfbe || yeaCommaProbablyAnIntersection && not_intersection_counter > 5) {
-    bhfbe = true;
-    yeaCommaProbablyAnIntersection = false;
+    if (!on_color) {
+      on_color = true;
+      std::cout << "I am on the target color!" << std::endl;
+    }
     drive.coast();
     return;
-  }
-
-  if (bhfbe || yeaCommaProbablyADeadEnd && not_dead_end_counter > 5) {
-    bhfbe_dead_end = true;
-    yeaCommaProbablyADeadEnd = false;
-    drive.coast();
-    return;
-  }
-
-  /* TODO
-  if (blackBoard.is_dead_end.get()) {
-    drive.turn_left();
-    drive.turn_left();
-    return;
-  }*/
-/*
-  static int wait_time_ms = 750;
-
-  auto [leftIntersection, middleIntersection, rightIntersection] = blackBoard.exits_intersection.get();
-
-  if (leftIntersection||middleIntersection||rightIntersection) {
-    drive.set_speed(0.5);
   } else {
-    drive.set_speed(2.0/3.0);
+    on_color = false;
   }
-
-  if (leftIntersection) {
-    if (!middleIntersection && !rightIntersection) {
-      if (!should_turn_left) {
-        should_turn_left = true;
-        leftTurnTime = std::chrono::system_clock::now();
-      }
-
-      // when the car is in the intersection for more than wait_time_ms milliseconds, turn left
-      auto now = std::chrono::system_clock::now();
-      if (std::chrono::duration_cast<std::chrono::milliseconds>(now - leftTurnTime).count() > wait_time_ms) {
-        should_turn_left = false;
-        drive.turn_left();
-        return;
-      }
-    } else {
-      should_turn_left = false;
-    }
-  }
-
-  if (rightIntersection) {
-    if (!middleIntersection && !leftIntersection) {
-      if (!should_turn_right) {
-        should_turn_right = true;
-        rightTurnTime = std::chrono::system_clock::now();
-      }
-
-      // when the car is in the intersection for more than wait_time_ms milliseconds, turn right
-      auto now = std::chrono::system_clock::now();
-      if (std::chrono::duration_cast<std::chrono::milliseconds>(now - rightTurnTime).count() > wait_time_ms) {
-        should_turn_right = false;
-        drive.turn_right();
-        return;
-      }
-    } else {
-      should_turn_right = false;
-    }
-  }
-*/
 
   /* ++++++++++++++  END  check special conditions  END  ++++++++++++++ */
 

@@ -39,6 +39,8 @@ class BlackBoard {
   SmartMember<bool> has_turned;                                     // flag indicating that the car has turned
 
   // Color sensor
+  SmartMember<bool> color_sensor_ready{false};             // flag indicating that the color sensor is ready
+
   SmartMember<std::vector<Color::ColorRange> > colors;              // vector of colors
   SmartMember<std::optional<Color::ColorRange> > current_color;     // current color
   SmartMember<std::optional<std::string> > target_color_name;       // target color
