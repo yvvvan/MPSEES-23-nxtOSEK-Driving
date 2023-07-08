@@ -44,8 +44,48 @@ int runFakeORBSLAM(const std::string& trajectory_file_name) {
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
+
   std::cout << "mapping state: finished " << m_blackboard.mapping_finished.get()
             << std::endl;
+
+  auto exits_duration_matrix = m_blackboard.cost_exits_map.get();
+  auto connection_matrix = m_blackboard.connection_map.get();
+  auto duration_matrix = m_blackboard.duration_map.get();
+
+  std::cout << "intersection No. | Connection at Exits S-W-N-E" << std::endl;
+  for(const auto& elem : connection_matrix){
+      int id = elem.first;
+      int south_exit =  std::get<0>(elem.second);
+      int left_exit =  std::get<1>(elem.second);
+      int north_exit =  std::get<2>(elem.second);
+      int right_exit =  std::get<3>(elem.second);
+      std::cout << id << " \t| " <<  south_exit << " \t" <<  left_exit << " \t" <<  north_exit << " \t" <<  right_exit << std::endl;
+  }
+  std::cout << "intersection No. | Costs Between Intersection No." << std::endl;
+  for(const auto& elem : duration_matrix){
+      int id = elem.first;
+      int i0 =  std::get<0>(elem.second);
+      int i1 =  std::get<1>(elem.second);
+      int i2 =  std::get<2>(elem.second);
+      int i3 =  std::get<3>(elem.second);
+      int i4 =  std::get<4>(elem.second);
+      int i5 =  std::get<5>(elem.second);
+      int i6 =  std::get<6>(elem.second);
+      int i7 =  std::get<7>(elem.second);
+      int i8 =  std::get<8>(elem.second);
+      int i9 =  std::get<9>(elem.second);
+      std::cout << id << " \t| " <<  i0 << " \t" <<  i1 << " \t" <<  i2 << " \t" <<  i3 << " \t" <<  i4 << " \t" <<  i5 << " \t" <<  i6 << " \t" <<  i7 << " \t" <<  i8 << " \t" <<  i9 << std::endl;
+  }
+  std::cout << "intersection No. | Duration to next intersection S-W-N-E" << std::endl;
+  for(const auto& elem : exits_duration_matrix){
+      int id = elem.first;
+      int south_exit =  std::get<0>(elem.second);
+      int left_exit =  std::get<1>(elem.second);
+      int north_exit =  std::get<2>(elem.second);
+      int right_exit =  std::get<3>(elem.second);
+      std::cout << id << " \t| " <<  south_exit << " \t" <<  left_exit << " \t" <<  north_exit << " \t" <<  right_exit << std::endl;
+  }
+
   return 0;
 }
 
