@@ -70,6 +70,7 @@ private:
   std::deque<bool> is_dead_end;
 
   // intersection booleans and distance
+  std::deque<bool> lower_intersections;                 // is there an intersection in the lower half
   std::deque<bool> is_intersection;                     // is there an intersection
   std::deque<std::array<bool, 3>> exits_intersection;   // is there an exit on the left, middle, right
 

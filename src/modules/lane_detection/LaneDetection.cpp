@@ -67,9 +67,9 @@ void LaneDetection::line_filtering() {
     if (std::abs(slope) > LANE_DETECTION_MIN_SLOPE) {
       // separate left and right lane lines
       //we need to check for both (slope and middle of the image) because if not we would detect a centerline outside the lane while turning in an intersection
-      if (slope < 0 && line[2] < IMAGE_MIDDLE)
+      if (slope < 0 && line[2] < IMAGE_MIDDLE_X)
         leftLanes.push_back(line);
-      else if (slope > 0 && line[2] > IMAGE_MIDDLE)
+      else if (slope > 0 && line[2] > IMAGE_MIDDLE_X)
         rightLanes.push_back(line);
     }
   }
@@ -137,8 +137,9 @@ void LaneDetection::line_filtering() {
  */
 void LaneDetection::check_intersection() {
   // Calculate the x-coordinate of the center of the image
-  double th = IMAGE_MIDDLE / 10;
+  double th = IMAGE_MIDDLE_X / 10;
   std::array<bool, 3> temp_intersections = {false, false, false};
+  bool temp_lower_intersections = false;
   bool temp_dead_end = false;
   double max_left = th;
   double max_right = th;
@@ -164,7 +165,7 @@ void LaneDetection::check_intersection() {
     double hx = (horizontalLine[0] + horizontalLine[2]) / 2;
 
     // checking for intersections on the left side
-    if (horizontalLine[0] < IMAGE_MIDDLE && horizontalLine[2] < IMAGE_MIDDLE) {
+    if (horizontalLine[0] < IMAGE_MIDDLE_X && horizontalLine[2] < IMAGE_MIDDLE_X) {
 
       // Calculate the intersection point with the left vertical line
       double mLeft =
@@ -177,7 +178,7 @@ void LaneDetection::check_intersection() {
           (mLeft * intersectionX) + bLeft; //just for visualization, maybe needed if returning a point
 
       // Check if the intersection point is within the left lane segment
-      if (intersectionX < IMAGE_MIDDLE && 0 <= intersectionX) {
+      if (intersectionX < IMAGE_MIDDLE_X && 0 <= intersectionX) {
 
         cv::circle(this->original_frame,
                    cv::Point2d(intersectionX, intersectionY),
@@ -188,7 +189,12 @@ void LaneDetection::check_intersection() {
         // there is an intersection on the left side
         temp_intersections[0] = true;
 
-        if (hx > IMAGE_MIDDLE - th && hx < IMAGE_MIDDLE + th && this->rightLane == cv::Vec4d()) {
+        // check if the intersection is the lower one
+        if ((horizontalLine[1]+horizontalLine[3])/2 >= (this->leftLane[1]+this->leftLane[3])/2) {
+          temp_lower_intersections = true;
+        }
+
+        if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th && this->rightLane == cv::Vec4d()) {
           // there is an intersection on the left but no right line -> not able to turn left or go ahead, just right is possible
           temp_intersections[0] = false;
           temp_intersections[2] = true;
@@ -206,7 +212,7 @@ void LaneDetection::check_intersection() {
     }
 
     // checking for intersections on the right side
-    if (horizontalLine[0] > IMAGE_MIDDLE && horizontalLine[2] > IMAGE_MIDDLE) {
+    if (horizontalLine[0] > IMAGE_MIDDLE_X && horizontalLine[2] > IMAGE_MIDDLE_X) {
 
       // Calculate the intersection point with the right vertical line
       double mRight = (this->rightLane[1] - this->rightLane[3]) / (this->rightLane[0] - this->rightLane[2]);
@@ -218,7 +224,7 @@ void LaneDetection::check_intersection() {
           (mRight * intersectionX) + bRight; //just for visualization, maybe needed if returning a point
 
       // Check if the intersection point is within the right lane segment
-      if (intersectionX > IMAGE_MIDDLE && intersectionX <= 2 * IMAGE_MIDDLE) {
+      if (intersectionX > IMAGE_MIDDLE_X && intersectionX <= 2 * IMAGE_MIDDLE_X) {
 
         cv::circle(this->original_frame,
                    cv::Point2d(intersectionX, intersectionY),
@@ -229,7 +235,12 @@ void LaneDetection::check_intersection() {
         // there is an intersection on the right side
         temp_intersections[2] = true;
 
-        if (hx > IMAGE_MIDDLE - th && hx < IMAGE_MIDDLE + th && this->leftLane == cv::Vec4d()) {
+        // check if the intersection is the lower one
+        if ((horizontalLine[1]+horizontalLine[3])/2 >= (this->rightLane[1]+this->rightLane[3])/2) {
+          temp_lower_intersections = true;
+        }
+
+        if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th && this->leftLane == cv::Vec4d()) {
           // there is an intersection on the right but no left line -> not able to turn right or go ahead, just left is possible
           temp_intersections[0] = true;
           temp_intersections[2] = false;
@@ -265,7 +276,7 @@ void LaneDetection::check_intersection() {
   this->exits_intersection.push_front(temp_intersections);
 
   // if is_intersection queue is full, pop the oldest element
-  if (this->is_intersection.size() == QUEUE_SIZE) {
+  if (this->is_intersection.size() == INTERSECTION_QUEUE_SIZE) {
     this->is_intersection.pop_back();
   }
 
@@ -274,6 +285,18 @@ void LaneDetection::check_intersection() {
     this->is_intersection.push_front(true);
   } else {
     this->is_intersection.push_front(false);
+  }
+
+  // if lower_intersections is full, pop the oldest element
+  if (this->lower_intersections.size() == INTERSECTION_QUEUE_SIZE) {
+    this->lower_intersections.pop_back();
+  }
+
+  // if lower intersection is detected, push true
+  if (temp_lower_intersections) {
+    this->lower_intersections.push_front(true);
+  } else {  
+    this->lower_intersections.push_front(false);
   }
 
   // - exits_intersection[0] = left
@@ -314,13 +337,13 @@ void LaneDetection::calculate_center() {
     cv::Vec4d center(mid_start_x, mid_start_y, mid_end_x, mid_end_y);
     this->centerLine.push_back(center);
 
-    //double mid_x = (mid_start_x + mid_end_x) * 0.5 - IMAGE_MIDDLE;
+    //double mid_x = (mid_start_x + mid_end_x) * 0.5 - IMAGE_MIDDLE_X;
     double slope = (mid_end_y - mid_start_y) / (mid_end_x - mid_start_x);
 
     this->offset_queue.push_front(slope);
 
   } else if (leftLane != cv::Vec4d()) {
-    // double mid_x_right = ((this->leftLane[0] + this->leftLane[2]) * 0.5 - IMAGE_MIDDLE);
+    // double mid_x_right = ((this->leftLane[0] + this->leftLane[2]) * 0.5 - IMAGE_MIDDLE_X);
     double slope = (this->leftLane[3] - this->leftLane[1]) / (this->leftLane[2] - this->leftLane[0]);
 
     // if we are in an intersection, we don't want to save the offset
@@ -332,7 +355,7 @@ void LaneDetection::calculate_center() {
       this->offset_queue.push_front(slope * MISSING_LANE_MULTIPLIER);
     }
   } else if (rightLane != cv::Vec4d()) {
-    // double mid_x_left = ((this->rightLane[0] + this->rightLane[2]) * 0.5 - IMAGE_MIDDLE);
+    // double mid_x_left = ((this->rightLane[0] + this->rightLane[2]) * 0.5 - IMAGE_MIDDLE_X);
     double slope = (this->rightLane[3] - this->rightLane[1]) / (this->rightLane[2] - this->rightLane[0]);
 
     // if we are in an intersection, we don't want to save the offset
@@ -443,15 +466,16 @@ void LaneDetection::return_function() {
 
   std::array<bool, 3> debug_result_exits_intersection = find_majority_exits_intersection();
 
-  /*std::cout
+  std::cout
           << "LaneDetection: "
           //<< "angle: " << angle
           << ",\tisIntersection: " << find_majority_bool_deque(this->is_intersection)
           //<< ", exits_intersection: " << debug_result_exits_intersection[0] << debug_result_exits_intersection[1] << debug_result_exits_intersection[2]
-          << ", is_dead_end: " << find_majority_bool_deque(this->is_dead_end)
+          //<< ", is_dead_end: " << find_majority_bool_deque(this->is_dead_end)
+          << "\tlowerIntersection: " << find_majority_bool_deque(this->lower_intersections)
           //<< ", hasLeftLane: " << this->hasLeftLane
           //<< ", hasRightLane: " << this->hasRightLane
-          << std::endl;*/
+          << std::endl;
 
   int lane_count = 0;
   if (this->hasLeftLane) {
@@ -467,6 +491,7 @@ void LaneDetection::return_function() {
   this->blackboard.offset_middle_line.set(angle);
 
   this->blackboard.is_intersection.set(find_majority_bool_deque(this->is_intersection));
+  this->blackboard.is_lower_intersection.set(find_majority_bool_deque(this->lower_intersections));
   this->blackboard.exits_intersection.set(find_majority_exits_intersection());
   this->blackboard.is_dead_end.set(find_majority_bool_deque(this->is_dead_end));
 
@@ -497,6 +522,7 @@ void LaneDetection::process_image_frame() {
     this->is_intersection.clear();
     this->exits_intersection.clear();
     this->is_dead_end.clear();
+    this->lower_intersections.clear();
     this->blackboard.has_turned = false;
     // wait at least one frame
     this->blackboard.lane_detection_ready = false;
@@ -690,6 +716,7 @@ void LaneDetection::setup_blackboard_smart_members() {
   this->blackboard.is_intersection.set(false);
   this->blackboard.exits_intersection.set(std::array<bool, 3>{false, false, false});
   this->blackboard.exits_distance_intersection.set(std::array<double, 3>{0.0, 0.0, 0.0});
+  this->blackboard.is_lower_intersection.set(false);
 }
 
 LaneDetection::LaneDetection(LaneDetectionMode mode) {

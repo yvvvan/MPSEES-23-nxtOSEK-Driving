@@ -54,6 +54,7 @@ class BlackBoard {
   SmartMember<bool> has_right_lane;                                 // check if right lane exists
   SmartMember<bool> is_dead_end;                                    // check if dead end exists
   SmartMember<bool> is_intersection;                                // check if intersection exists
+  SmartMember<bool> is_lower_intersection;                          // check if intersection exists in the lower half
   SmartMember<double> offset_middle_line;                           // current offset to middle line
   SmartMember<double> distance_intersection;                        // distance to intersection
   SmartMember<std::array<bool, 3>> exits_intersection;              // left, middle, right

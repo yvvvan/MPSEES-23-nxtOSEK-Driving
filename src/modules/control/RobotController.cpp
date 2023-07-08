@@ -91,7 +91,7 @@ void RobotController::execute() {
     lap = std::chrono::system_clock::now();
 
     // check whether ten seconds have elapsed
-    if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 30) {
+    if (std::chrono::duration_cast<std::chrono::seconds>(lap - start).count() > 60) {
       // initiate termination of the program
       blackBoard.running = false;
       return;
@@ -106,7 +106,7 @@ void RobotController::execute() {
   static int min_intersection_counter = 10;
   static int min_not_intersection_counter = 10;
 
-  if (blackBoard.is_intersection.get()) {
+  if (blackBoard.is_lower_intersection.get()) {
     intersection_counter++;
     not_intersection_counter = 0;
     if (intersection_counter > min_intersection_counter / 2) {
@@ -124,7 +124,7 @@ void RobotController::execute() {
   }
 
   if (yeaCommaProbablyAnIntersection) {
-    if (not_intersection_counter > min_not_intersection_counter) {
+    if (blackBoard.is_lower_intersection.get()) {
       yeaCommaProbablyAnIntersection = false;
       intersection_counter = 0;
       not_intersection_counter = 0;

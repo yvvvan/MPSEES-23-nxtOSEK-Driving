@@ -84,7 +84,7 @@ void Drive::turn(bool _left) {
   static const double start_speed = 0.2;
   static const double target_speed = 0.9;
 
-  static const int turn_time_ms = 1433;
+  static const int turn_time_ms = (1433/9.0)*8.0;
 
   // set both motors to coast
   coast();
