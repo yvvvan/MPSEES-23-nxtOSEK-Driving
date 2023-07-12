@@ -2,7 +2,6 @@
 #define NAVIGATION_HPP
 
 #include "communication/internal/BlackBoard.hpp"
-#include "localization.hpp"
 
 #define MAX_SIZE 12
 #define INF 9999
@@ -29,10 +28,10 @@ class Navigation {
    */
   int exec_thread();
 
+  void track_map();
+
  private:
   BlackBoard &blackboard = BlackBoard::getInstance();
-
-  Localization localization;
 
   int start = 2;
   int end = -1;

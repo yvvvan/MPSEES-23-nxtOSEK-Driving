@@ -2,7 +2,7 @@
 
 /* own headers */
 #include "globals.hpp"
-#include "remote_control/utils/Utilities.hpp"
+#include "../lib/remote_control/utils/Utilities.hpp"
 #include "communication/internal/BlackBoard.hpp"
 
 /* library headers */

@@ -9,7 +9,7 @@
 #include "modules/movement/Drive.hpp"
 #include "modules/movement/IMovement.hpp"
 #include "modules/slam/navigation.hpp"
-#include "remote_control/DS4.hpp"
+#include "../lib/remote_control/DS4.hpp"
 
 int test_main() {
   ColorSensor colorSensor;
@@ -84,9 +84,10 @@ int main() {
   // TODO: webserver thread
 
   std::thread([&blackBoard]() {
-    blackBoard.destination.set(10);
-    blackBoard.next_intersection.set(3);
-    blackBoard.last_intersection.set(0);
+    blackBoard.destination.set(8);
+    blackBoard.next_intersection.set(4);
+    blackBoard.last_intersection.set(7);
+    blackBoard.intersection_handled.set(true);
     Navigation navigation;
     navigation.exec_thread();
   }).detach();

@@ -91,7 +91,7 @@ void RobotController::execute() {
       std::chrono::duration_cast<std::chrono::milliseconds>(lap - start)
           .count();
   // check whether ten seconds have elapsed
-  if (time_total > 10000) {
+  if (time_total > 60000) {
     // initiate termination of the program
     blackBoard.running = false;
     return;

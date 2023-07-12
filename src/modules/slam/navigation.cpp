@@ -21,6 +21,34 @@ int index(int val, int *list) {
   return -1;
 }
 
+void Navigation::track_map() {
+  int last_intersection = this->blackboard.last_intersection.get();
+  int next_intersection = this->blackboard.next_intersection.get();
+  direction_t turn_direction = this->blackboard.direction.get();
+
+  int current_exit =
+      index(last_intersection, this->C[next_intersection]);
+  if (current_exit == -1) {
+    std::cout << "ERROR: Could not find current direction in map" << std::endl;
+    return;
+  }
+
+  if (turn_direction == direction_t::LEFT) {
+    current_exit = (current_exit + 1) % 4;
+  } else if (turn_direction == direction_t::RIGHT) {
+    current_exit = (current_exit + 3) % 4;
+  } else if (turn_direction == direction_t::STRAIGHT) {
+    current_exit = (current_exit + 2) % 4;
+  }
+  this->blackboard.last_intersection = next_intersection;
+  next_intersection = this->C[next_intersection][current_exit];
+  if (next_intersection == -1) {
+    std::cout << "ERROR: Could not find next intersection in map" << std::endl;
+    return;
+  }
+  this->blackboard.next_intersection = next_intersection;
+}
+
 array<array<int, MAX_SIZE>, 2> dijkstra(int G[MAX_SIZE][MAX_SIZE],
                                         int C[MAX_SIZE][4], int startnode,
                                         int endnode) {
@@ -140,7 +168,7 @@ int Navigation::exec_thread() {
   int intersection_count = 0;
   int turn_direction = 0;
   direction_t new_direction = UNKNOWN;
-  int current_direction = -1;
+  int current_exit = -1;
   while (this->blackboard.running.get()) {
     if (!this->blackboard.navigation_enabled.get()) continue;
 
@@ -150,7 +178,6 @@ int Navigation::exec_thread() {
     if (start == destination) {
       this->blackboard.destination_reached.set(true);
     }
-    cout << end << ' ' << destination << endl;
     // new destination
     if (end != destination) {
       end = destination;
@@ -162,44 +189,52 @@ int Navigation::exec_thread() {
       // check if we passed a intersection
       if (path_found[0][intersection_count] ==
           blackboard.next_intersection.get()) {
+        if (!this->blackboard.intersection_handled.get()) continue;
+        this->blackboard.intersection_handled = false;
+
+
         // get south/west/east/north direction
         int next_exit = path_found[1][intersection_count];
+        if (next_exit == -1) {
+          cout << "reached!!!!!" << endl;
+          return 0;
+        }
 
         intersection_count++;
 
         // get south/west ... which Robot is driving now
-        current_direction = index(blackboard.last_intersection.get(), C[start]);
+        current_exit = index(blackboard.last_intersection.get(), C[start]);
         new_direction =
-            static_cast<direction_t>((next_exit - current_direction + 4) % 4);
+            static_cast<direction_t>((next_exit - current_exit + 4) % 4);
         blackboard.direction.set(new_direction);
 
         // update next_intersection and last_intersection
-        this->localization.track_map();
+        track_map();
       }
 
-      cout << " Navigation:  "
+      cout << " Navigation2:  "
            << " Direction:" << new_direction
-           << " first intersection: " << path_found[0][0]
-           << " current direction: " << current_direction
-           << " Next Intersction: " << start
+           << " current exit: " << current_exit
+           << " next intersection A: " << path_found[0][intersection_count]
+           << " Next Intersction B: " << blackboard.next_intersection.get()
            << " Last Intersection: " << blackboard.last_intersection.get()
            << endl;
 
-      //      switch (current_direction) {
+      //      switch (current_exit) {
       //        case SOUTH_EXIT:
-      //          turn_direction = current_direction;
+      //          turn_direction = current_exit;
       //          break;
       //        case WEST_EXIT:
-      //          turn_direction = (current_direction + 3) % 4;
+      //          turn_direction = (current_exit + 3) % 4;
       //          break;
       //        case NORTH_EXIT:
-      //          turn_direction = (current_direction + next_exit) % 4;
+      //          turn_direction = (current_exit + next_exit) % 4;
       //          break;
       //        case EAST_EXIT:
-      //          current_direction = 3;
+      //          current_exit = 3;
       //          break;
       //        default:
-      //          cout << "Error: current_direction == -1" << endl;
+      //          cout << "Error: current_exit == -1" << endl;
       //          blackboard.running.set(false);
       //          return -1;
       //      }

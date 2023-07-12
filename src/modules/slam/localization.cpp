@@ -120,32 +120,3 @@ int get_index_of(std::array<int, 4> array, int value) {
   return -1;
 }
 
-void Localization::track_map() {
-  int last_intersection = blackboard.last_intersection.get();
-  int next_intersection = blackboard.next_intersection.get();
-  bool intersection_handled = blackboard.intersection_handled.get();
-  auto map = blackboard.connection_map.get();
-  direction_t turn_direction = blackboard.direction.get();
-
-  int current_direction =
-      get_index_of(map[next_intersection], last_intersection);
-  if (current_direction == -1) {
-    std::cout << "ERROR: Could not find current direction in map" << std::endl;
-    return;
-  }
-
-  if (turn_direction == LEFT) {
-    current_direction = (current_direction + 1) % 4;
-  } else if (turn_direction == RIGHT) {
-    current_direction = (current_direction + 3) % 4;
-  } else if (turn_direction == STRAIGHT) {
-    current_direction = (current_direction + 2) % 4;
-  }
-  blackboard.last_intersection = next_intersection;
-  next_intersection = map.at(next_intersection).at(current_direction);
-  if (next_intersection == -1) {
-    std::cout << "ERROR: Could not find next intersection in map" << std::endl;
-    return;
-  }
-  blackboard.next_intersection = next_intersection;
-}
