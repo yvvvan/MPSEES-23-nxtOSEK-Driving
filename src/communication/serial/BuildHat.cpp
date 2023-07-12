@@ -2,8 +2,8 @@
 
 /* own headers */
 #include "globals.hpp"
-#include "../lib/remote_control/utils/Utilities.hpp"
 #include "communication/internal/BlackBoard.hpp"
+#include "remote_control/utils/Utilities.hpp"
 
 /* library headers */
 #include <thread>
