@@ -76,6 +76,7 @@ constexpr int IMAGE_HEIGHT = 480;
 
 // lane detection
 constexpr int QUEUE_SIZE = FPS / 5;
+constexpr int LANE_LOST_QUEUE_SIZE = FPS * 2;
 constexpr int INTERSECTION_QUEUE_SIZE = FPS / 2;
 constexpr double IMAGE_MIDDLE_X = IMAGE_WIDTH / 2.0;
 constexpr double IMAGE_MIDDLE_Y = IMAGE_HEIGHT / 2.0;

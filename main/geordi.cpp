@@ -1,7 +1,6 @@
 #include <thread>
 
 #include "communication/internal/BlackBoard.cpp"
-
 #include "modules/control/RobotController.hpp"
 #include "modules/lane_detection/LaneDetection.hpp"
 #include "modules/slam/navigation.hpp"
@@ -26,9 +25,9 @@ int main() {
   // TODO: webserver thread
 
   std::thread([&blackBoard]() {
-    blackBoard.destination.set(8);
-    blackBoard.next_intersection.set(4);
-    blackBoard.last_intersection.set(7);
+    blackBoard.destination.set(11);
+    blackBoard.next_intersection.set(2);
+    blackBoard.current_exit.set(1);
     blackBoard.intersection_handled.set(true);
     Navigation navigation;
     navigation.exec_thread();

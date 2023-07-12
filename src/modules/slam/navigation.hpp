@@ -67,6 +67,22 @@ class Navigation {
       /*7*/ {-1, 3, 10, 5},
   };
 
+  // clang-format off
+  /* maps exit of the intersection with the intersection connected to the exit
+   */
+  const int intersection_map[MAX_SIZE][4][2] = {
+      // S  W   N    E
+/*0*/ {{3, NORTH_EXIT}, {3, WEST_EXIT}, {-1, UNKNOWN_EXIT}, {1, WEST_EXIT}},
+/*1*/ {{1, SOUTH_EXIT}, {0, EAST_EXIT}, {-1, UNKNOWN_EXIT}, {2, WEST_EXIT}},
+/*2*/ {{6, NORTH_EXIT}, {1, EAST_EXIT}, {-1, UNKNOWN_EXIT}, {-1, UNKNOWN_EXIT}},
+/*3*/ {{7, WEST_EXIT}, {0, WEST_EXIT}, {0, SOUTH_EXIT}, {4, WEST_EXIT}},
+/*4*/ {{7, NORTH_EXIT}, {3, EAST_EXIT}, {-1, UNKNOWN_EXIT}, {5, WEST_EXIT}},
+/*5*/ {{7, EAST_EXIT}, {4, EAST_EXIT}, {-1, UNKNOWN_EXIT}, {6, WEST_EXIT}},
+/*6*/ {{-1, UNKNOWN_EXIT}, {5, EAST_EXIT}, {2, SOUTH_EXIT}, {-1, UNKNOWN_EXIT}},
+/*7*/ {{-1, UNKNOWN_EXIT}, {3, SOUTH_EXIT}, {4, SOUTH_EXIT}, {5, SOUTH_EXIT}},
+  };
+  // clang-format on
+
   /* only need if there are two connections between 2 intersections, and need to
    * choose a shorter*/
   int C_E[8][4] = {

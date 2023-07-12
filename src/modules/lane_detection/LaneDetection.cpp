@@ -97,7 +97,7 @@ void LaneDetection::line_filtering() {
     x2 /= static_cast<double>(leftLanes.size());
     y2 /= static_cast<double>(leftLanes.size());
     leftLane = cv::Vec4d(x1, y1, x2, y2);
-    hasLeftLane = true;
+    hasLeftLane.push_front(true);
   }
 
   // calculate average line for left and right lane
@@ -119,7 +119,7 @@ void LaneDetection::line_filtering() {
     rightLane = cv::Vec4d(
         x2, y2, x1,
         y1);  // change order, so that it's like in a normal coordinate system
-    hasRightLane = true;
+    hasRightLane.push_front(true);
   }
 
   // check for horizontal lines
@@ -202,6 +202,7 @@ void LaneDetection::check_intersection() {
         if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
             (this->leftLane[1] + this->leftLane[3]) / 2) {
           temp_lower_intersections = true;
+          std::cout << "lower intersection" << std::endl;
         }
 
         if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
@@ -255,6 +256,7 @@ void LaneDetection::check_intersection() {
         if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
             (this->rightLane[1] + this->rightLane[3]) / 2) {
           temp_lower_intersections = true;
+          std::cout << "lower intersection" << std::endl;
         }
 
         if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
@@ -288,6 +290,14 @@ void LaneDetection::check_intersection() {
     this->is_dead_end.push_front(false);
   }
 
+  if (this->hasLeftLane.size() == LANE_LOST_QUEUE_SIZE) {
+    this->hasLeftLane.pop_back();
+  }
+
+  if (this->hasRightLane.size() == LANE_LOST_QUEUE_SIZE) {
+    this->hasRightLane.pop_back();
+  }
+
   if (this->is_dead_end.size() == INTERSECTION_QUEUE_SIZE) {
     this->is_dead_end.pop_back();
   }
@@ -312,7 +322,7 @@ void LaneDetection::check_intersection() {
   }
 
   // if lower_intersections is full, pop the oldest element
-  if (this->lower_intersections.size() == INTERSECTION_QUEUE_SIZE) {
+  if (this->lower_intersections.size() == INTERSECTION_QUEUE_SIZE / 4) {
     this->lower_intersections.pop_back();
   }
 
@@ -522,16 +532,18 @@ void LaneDetection::return_function() {
   //      << std::endl;
 
   int lane_count = 0;
-  if (this->hasLeftLane) {
+  bool hasLeftMajor = find_majority_bool_deque(this->hasLeftLane);
+  if (hasLeftMajor) {
     lane_count++;
   }
-  if (this->hasRightLane) {
+  bool hasRightMajor = find_majority_bool_deque(this->hasRightLane);
+  if (hasRightMajor) {
     lane_count++;
   }
 
   this->blackboard.lane_count = lane_count;
-  this->blackboard.has_left_lane = this->hasLeftLane;
-  this->blackboard.has_right_lane = this->hasRightLane;
+  this->blackboard.has_left_lane = hasLeftMajor;
+  this->blackboard.has_right_lane = hasRightMajor;
   this->blackboard.offset_middle_line.set(angle);
 
   this->blackboard.is_intersection.set(
@@ -558,9 +570,9 @@ void LaneDetection::process_image_frame() {
   /***** Clear all vectors and bools *****/
   // set all vector values to null so that we can check if a line was detected
   this->leftLane = cv::Vec4d();
-  this->hasLeftLane = false;
+  this->hasLeftLane.clear();
   this->rightLane = cv::Vec4d();
-  this->hasRightLane = false;
+  this->hasRightLane.clear();
   this->centerLine.clear();
   this->horizontalLines.clear();
 

@@ -68,3 +68,5 @@ add_custom_target(BUILD_ALL ALL DEPENDS
 ## Add testing
 #enable_testing()
 #add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+
+add_subdirectory(test)

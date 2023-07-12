@@ -14,7 +14,8 @@ typedef enum Exit {
   WEST_EXIT = 1,
   NORTH_EXIT = 2,
   EAST_EXIT = 3,
-  SOUTH_EXIT = 0
+  SOUTH_EXIT = 0,
+  UNKNOWN_EXIT = -1
 } exit_t;
 
 typedef enum Station {

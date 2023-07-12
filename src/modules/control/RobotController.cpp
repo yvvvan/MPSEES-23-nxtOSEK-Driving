@@ -102,6 +102,19 @@ void RobotController::execute() {
 
   /* ++++++++++++++ BEGIN check special conditions BEGIN ++++++++++++++ */
 
+  static bool on_color = false;
+  // check whether the car is on the target color, if so, coast
+  if (blackBoard.on_target_color.get()) {
+    if (!on_color) {
+      on_color = true;
+      std::cout << "I am on the target color!" << std::endl;
+    }
+    drive.coast();
+    return;
+  } else {
+    on_color = false;
+  }
+
   static int min_intersection_counter = 10;
   static int min_not_intersection_counter = 10;
 
@@ -125,7 +138,7 @@ void RobotController::execute() {
   }
 
   if (yeaCommaProbablyAnIntersection) {
-    if (blackBoard.is_lower_intersection.get()) {
+    if (!blackBoard.is_lower_intersection.get()) {
       yeaCommaProbablyAnIntersection = false;
       intersection_counter = 0;
       not_intersection_counter = 0;
@@ -144,17 +157,9 @@ void RobotController::execute() {
     }
   }
 
-  static bool on_color = false;
-  // check whether the car is on the target color, if so, coast
-  if (blackBoard.on_target_color.get()) {
-    if (!on_color) {
-      on_color = true;
-      std::cout << "I am on the target color!" << std::endl;
-    }
-    drive.coast();
+  if (blackBoard.lane_count.get() < 1) {
+    drive.turn_left();
     return;
-  } else {
-    on_color = false;
   }
 
   /* ++++++++++++++  END  check special conditions  END  ++++++++++++++ */
