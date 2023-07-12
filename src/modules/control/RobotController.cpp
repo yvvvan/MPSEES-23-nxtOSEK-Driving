@@ -157,10 +157,10 @@ void RobotController::execute() {
     }
   }
 
-  if (blackBoard.lane_count.get() < 1) {
-    drive.turn_left();
-    return;
-  }
+//  if (blackBoard.lane_count.get() < 1) {
+//    drive.turn_left();
+//    return;
+//  }
 
   /* ++++++++++++++  END  check special conditions  END  ++++++++++++++ */
 

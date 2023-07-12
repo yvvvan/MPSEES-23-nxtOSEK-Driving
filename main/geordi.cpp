@@ -26,8 +26,8 @@ int main() {
 
   std::thread([&blackBoard]() {
     blackBoard.destination.set(11);
-    blackBoard.next_intersection.set(2);
-    blackBoard.current_exit.set(1);
+    blackBoard.next_intersection.set(3);
+    blackBoard.current_exit.set(NORTH_EXIT);
     blackBoard.intersection_handled.set(true);
     Navigation navigation;
     navigation.exec_thread();

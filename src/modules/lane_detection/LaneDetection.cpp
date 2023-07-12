@@ -202,7 +202,7 @@ void LaneDetection::check_intersection() {
         if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
             (this->leftLane[1] + this->leftLane[3]) / 2) {
           temp_lower_intersections = true;
-          std::cout << "lower intersection" << std::endl;
+          // std::cout << "lower intersection" << std::endl;
         }
 
         if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
@@ -256,7 +256,7 @@ void LaneDetection::check_intersection() {
         if ((horizontalLine[1] + horizontalLine[3]) / 2 >=
             (this->rightLane[1] + this->rightLane[3]) / 2) {
           temp_lower_intersections = true;
-          std::cout << "lower intersection" << std::endl;
+          // std::cout << "lower intersection" << std::endl;
         }
 
         if (hx > IMAGE_MIDDLE_X - th && hx < IMAGE_MIDDLE_X + th &&
