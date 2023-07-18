@@ -2,7 +2,8 @@
 
 /* own headers */
 #include "globals.hpp"
-#include "utils/Utilities.hpp"
+#include "communication/internal/BlackBoard.hpp"
+#include "remote_control/utils/Utilities.hpp"
 
 /* library headers */
 #include <thread>
@@ -11,7 +12,7 @@
 
 BuildHat *BuildHat::instance = nullptr;
 std::mutex BuildHat::instance_mutex_;
-std::mutex BuildHat::serial_access_mutex_;
+std::recursive_mutex BuildHat::serial_access_mutex_;
 
 ISerialReadWrite &BuildHat::getInstance() {
   // Double-Checked Locking optimization
@@ -51,13 +52,14 @@ BuildHat::BuildHat() :
   serial_write_line("echo 0", false);
 
   // check voltage reported by BuildHat
-  serial_write_line("vin", false);
-  std::cout << "Voltage at buildhat: " << serial_read_line(false) << std::endl;
+  std::cout << "Voltage at buildhat: " << serial_write_read("vin", false) << std::endl;
 
   // clear any faults
   serial_write_line("clear_faults", false);
 
   ready = true;
+
+  BlackBoard::getInstance().buildHatReady = true;
 }
 
 BuildHat::~BuildHat() {
@@ -69,11 +71,9 @@ int BuildHat::update_hat_state() {
   const std::string FIRMWARE = "Firmware version: ";
   const std::string BOOTLOADER = "BuildHAT bootloader version";
 
-  serial_write_line("version", false);
-
   int inc_data = 0;
   while (true) {
-    std::string line = serial_read_line();
+    std::string line = serial_write_read("version", false);
 
     if (line.find(FIRMWARE) != std::string::npos) {
       std::cout << "BuildHAT has firmware: " << line << std::endl;
@@ -88,8 +88,7 @@ int BuildHat::update_hat_state() {
       if (inc_data > 20) {
         return -1;
       } else {
-        // got data we don't understand, send version again
-        serial_write_line("version");
+        // got data we don't understand, try again
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         continue;
       }
@@ -221,7 +220,7 @@ void BuildHat::serial_write_line(std::string const &data, bool log, std::string 
   }
 
   {
-    std::lock_guard<std::mutex> lock(serial_access_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(serial_access_mutex_);
 
     serial_stream << data << '\r' << std::flush;
     serial_stream.DrainWriteBuffer();
@@ -237,7 +236,7 @@ std::string BuildHat::serial_read_line(bool log, std::string const &alt) {
     return {};
   }
 
-  std::lock_guard<std::mutex> lock(serial_access_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(serial_access_mutex_);
 
   std::string line;
   while (line.empty() && std::getline(serial_stream, line)) {
@@ -245,4 +244,10 @@ std::string BuildHat::serial_read_line(bool log, std::string const &alt) {
     if (log) std::cout << (alt.empty() ? line : alt) << std::endl;
   }
   return line;
+}
+
+std::string BuildHat::serial_write_read(std::string const &data, bool log, std::string const &alt) {
+  std::lock_guard<std::recursive_mutex> lock(serial_access_mutex_);
+  serial_write_line(data, log, alt);
+  return serial_read_line(log, alt);
 }

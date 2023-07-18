@@ -33,7 +33,7 @@ Motor::Motor(uint8_t id) {
 }
 
 void Motor::stop() {
-  hat.serial_write_line("port " + std::to_string(id) + " ; stop", DEBUG_MOTOR_COMMANDS);
+  hat.serial_write_line("port " + std::to_string(id) + " ; off", DEBUG_MOTOR_COMMANDS);
 }
 
 void Motor::coast() {

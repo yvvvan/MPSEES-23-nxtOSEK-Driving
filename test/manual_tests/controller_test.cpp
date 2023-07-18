@@ -4,7 +4,7 @@
 #include <fstream>
 #include <thread>
 
-#include "DS4.hpp"
+#include "remote_control/DS4.hpp"
 #include "communication/internal/BlackBoard.hpp"
 #include "modules/lane_detection/LaneDetection.hpp"
 #include "modules/movement/Drive.hpp"

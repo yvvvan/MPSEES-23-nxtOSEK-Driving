@@ -1,30 +1,27 @@
 #ifndef LANE_DETECTION_MAIN_HPP
 #define LANE_DETECTION_MAIN_HPP
 
-#include <array>
-#include <deque>
-#include <vector>
 #include <cstring>
+#include <deque>
 #include <iostream>
-
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 #include "communication/internal/BlackBoard.hpp"
 
 /**
  * @brief The mode to run in.
  */
-enum LaneDetectionMode {
-  IMAGE,
-  VIDEO,
-  CAMERA
-};
+enum LaneDetectionMode { IMAGE, VIDEO, CAMERA };
 
 /**
  * @brief The lane detection class.
  */
 class LaneDetection {
- GEORDI_PUBLIC:
+ public:
+  // the mode to run in
+  LaneDetectionMode mode;
+
   /**
    * @brief Construct a new Lane Detection object.
    *
@@ -34,8 +31,9 @@ class LaneDetection {
 
   /**
    * @brief Destroy the Lane Detection object.
+   *
    */
-  ~LaneDetection();
+  ~LaneDetection() = default;
 
   /**
    * @brief Runs the lane detection.
@@ -44,23 +42,20 @@ class LaneDetection {
    */
   void run(const char *path);
 
- GEORDI_PRIVATE:
+ private:
   // blackboard
   BlackBoard &blackboard{BlackBoard::getInstance()};
 
-  // the mode to run in
-  LaneDetectionMode mode;
-
   // frame
   cv::Mat frame;
-  cv::Mat original_frame; // only for debugging, remove in final version
+  cv::Mat original_frame;  // only for debugging, remove in final version
 
   // right and left lane
   cv::Vec4d leftLane;
   cv::Vec4d rightLane;
 
-  bool hasLeftLane{false};
-  bool hasRightLane{false};
+  std::deque<bool> hasLeftLane;
+  std::deque<bool> hasRightLane;
 
   // important lines
   std::vector<cv::Vec4d> horizontalLines;
@@ -70,14 +65,18 @@ class LaneDetection {
   std::deque<bool> is_dead_end;
 
   // intersection booleans and distance
-  std::deque<bool> is_intersection;                     // is there an intersection
-  std::deque<std::array<bool, 3>> exits_intersection;   // is there an exit on the left, middle, right
+  std::deque<bool>
+      lower_intersections;  // is there an intersection in the lower half
+  std::deque<bool> is_intersection;  // is there an intersection
+  std::deque<std::array<bool, 3>>
+      exits_intersection;  // is there an exit on the left, middle, right
 
   // queue for the last 4 offsets
   std::deque<double> offset_queue;
 
   /**
-   * @brief Find the right and left line on the preprocessed image. Remove unnecessary lines.
+   * @brief Find the right and left line on the preprocessed image. Remove
+   * unnecessary lines.
    */
   void line_filtering();
 
@@ -133,4 +132,4 @@ class LaneDetection {
   static bool find_majority_bool_deque(std::deque<bool> &boolDeque);
 };
 
-#endif //LANE_DETECTION_MAIN_HPP
+#endif  // LANE_DETECTION_MAIN_HPP
