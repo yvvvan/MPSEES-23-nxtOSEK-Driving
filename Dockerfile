@@ -10,6 +10,19 @@ RUN apt-get update && apt-get install -y \
     qemu-user-static \
     libbluetooth-dev \
     libserial-dev \
+    libgl1-mesa-dev \
+    libwayland-dev \
+    libxkbcommon-dev \
+    wayland-protocols \
+    libc++-dev \
+    libglew-dev \
+    libavdevice-dev \
+    ninja-build \
+    libboost-all-dev libboost-dev \
+    libssl-dev \
+    libpython2.7-dev \
+    libopencv-dev \
+    libgstreamer-opencv1.0-0 gstreamer1.0-opencv \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a directory for your project
